@@ -1,0 +1,6 @@
+youtube-transcript-api
+pytube
+langchain
+langchain-community
+ollama
+chromadb
