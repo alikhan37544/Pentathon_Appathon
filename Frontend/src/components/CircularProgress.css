@@ -1,0 +1,31 @@
+.circular-progress {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circular-progress-bg {
+  fill: none;
+  stroke: #edf2f7;
+}
+
+.circular-progress-bar {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}
+
+.circular-progress-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #131c31;
+}
+
+.circular-progress-text .percentage {
+  font-size: 0.875rem;
+}

@@ -1,0 +1,94 @@
+.question-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 0.75rem;
+}
+
+.question-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-item.selected {
+  background-color: #f1f4ff;
+  border-left: 3px solid #4361ee;
+}
+
+.question-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  background-color: #f1f4ff;
+  color: #4361ee;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 6px;
+}
+
+.question-content {
+  flex: 1;
+  min-width: 0; /* Ensures text truncation works */
+}
+
+.question-text {
+  font-size: 0.875rem;
+  color: #141b2d;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.question-progress {
+  height: 6px;
+  background-color: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.question-score {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.question-score.excellent {
+  background-color: rgba(46, 196, 182, 0.15);
+  color: #2ec4b6;
+}
+
+.question-score.good {
+  background-color: rgba(67, 97, 238, 0.15);
+  color: #4361ee;
+}
+
+.question-score.average {
+  background-color: rgba(255, 159, 28, 0.15);
+  color: #ff9f1c;
+}
+
+.question-score.below-average {
+  background-color: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+}
+
+.question-score.poor {
+  background-color: rgba(230, 57, 70, 0.15);
+  color: #e63946;
+}
