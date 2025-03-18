@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Flask App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the RAG Flask App</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('main.index') }}">Home</a></li>
+                <li><a href="{{ url_for('document.upload') }}">Upload Document</a></li>
+                <li><a href="{{ url_for('document.query') }}">Query Documents</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>Overview</h2>
+            <p>This application allows you to upload documents and query them using natural language.</p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2023 RAG Flask App</p>
+    </footer>
+</body>
+</html>
