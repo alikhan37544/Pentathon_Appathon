@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(uploadForm);
-            fetch('/upload', {
+            fetch('/upload_document', {
                 method: 'POST',
                 body: formData
             })
@@ -27,15 +27,15 @@ document.addEventListener('DOMContentLoaded', function() {
         queryForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const queryText = document.getElementById('query-text').value;
-            fetch(`/query?text=${encodeURIComponent(queryText)}`)
+            fetch(`/query_document?question=${encodeURIComponent(queryText)}`)
             .then(response => response.json())
             .then(data => {
                 const resultsContainer = document.getElementById('results');
                 resultsContainer.innerHTML = '';
                 data.results.forEach(result => {
-                    const resultItem = document.createElement('div');
-                    resultItem.textContent = result;
-                    resultsContainer.appendChild(resultItem);
+                    const resultElement = document.createElement('div');
+                    resultElement.textContent = result;
+                    resultsContainer.appendChild(resultElement);
                 });
             })
             .catch(error => {

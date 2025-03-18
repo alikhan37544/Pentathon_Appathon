@@ -3,28 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAG Flask App</title>
+    <title>{% block title %}RAG Flask App{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 </head>
 <body>
     <header>
-        <h1>Welcome to the RAG Flask App</h1>
+        <h1>RAG Flask App</h1>
         <nav>
             <ul>
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('document.upload') }}">Upload Document</a></li>
-                <li><a href="{{ url_for('document.query') }}">Query Documents</a></li>
+                <li><a href="{{ url_for('document.upload_document') }}">Upload Document</a></li>
+                <li><a href="{{ url_for('document.query_document') }}">Query Documents</a></li>
             </ul>
         </nav>
     </header>
     <main>
-        <section>
-            <h2>Overview</h2>
-            <p>This application allows you to upload documents and query them using natural language.</p>
-        </section>
+        {% block content %}{% endblock %}
     </main>
     <footer>
-        <p>&copy; 2023 RAG Flask App</p>
+        <p>&copy; {{ current_year }} RAG Flask App</p>
     </footer>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
