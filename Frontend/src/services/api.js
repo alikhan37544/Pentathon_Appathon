@@ -4,6 +4,30 @@ const API_URL = process.env.NODE_ENV === 'production'
     ? 'http://localhost:5000'
     : `http://${window.location.hostname}:5000`;  // Use the same hostname as frontend
 
+const viewResults = async () => {
+  try {
+    // Use fetch directly with the correct URL and appropriate headers
+    const response = await fetch('/api/results', {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html,application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    // Handle the response as text since we're expecting HTML
+    const htmlContent = await response.text();
+    return htmlContent;
+  } catch (error) {
+    console.error("Error fetching results:", error);
+    throw error;
+  }
+};
+
 export const api = {
   // Start the evaluation process
   startEvaluation: async () => {
@@ -73,21 +97,5 @@ export const api = {
   },
 
   // View results
-  viewResults: async () => {
-    try {
-      const response = await fetch(`${API_URL}/results`, {
-        mode: 'cors',
-        credentials: 'omit'
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.text();
-    } catch (error) {
-      console.error('Error viewing results:', error);
-      throw error;
-    }
-  }
+  viewResults
 };

@@ -14,11 +14,19 @@ const ResultsViewPage = () => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const html = await api.viewResults();
+        
+        if (!html || html.trim() === '') {
+          throw new Error('No results data received');
+        }
+        
         setResultsHtml(html);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load results');
+        console.error('Failed to load results:', err);
+        setError(`Failed to load results: ${err.message || 'Unknown error'}`);
         setLoading(false);
       }
     };
@@ -44,7 +52,26 @@ const ResultsViewPage = () => {
         {loading ? (
           <LoadingSpinner message="Loading results..." />
         ) : error ? (
-          <div className="error-message">{error}</div>
+          <div className="error-container">
+            <div className="error-message">
+              <h3>Error Loading Results</h3>
+              <p>{error}</p>
+              <p>This might be because:</p>
+              <ul>
+                <li>No evaluation has been run yet</li>
+                <li>The results file isn't properly generated</li>
+                <li>There was a network issue connecting to the server</li>
+              </ul>
+              <div className="error-actions">
+                <Link to="/evaluation" className="btn btn-primary">
+                  Go to Evaluation
+                </Link>
+                <button onClick={() => window.location.reload()} className="btn btn-secondary">
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
           <div 
             className="results-content"
