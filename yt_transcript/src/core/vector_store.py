@@ -21,19 +21,15 @@ def add_video_data_to_chroma(video_data):
     video_url = video_data["video_info"]["url"]
     video_title = video_data["video_info"]["title"]
     
-    # Process transcript chunks (use raw text instead of summaries)
     for summary in video_data["summaries"]:
-        # Generate a unique ID for this chunk
         chunk_id = str(uuid.uuid4())
         
-        # Store raw text in vector database
         db.add_texts(
             texts=[summary["text"]],
             ids=[chunk_id],
             metadatas=[{"chunk_id": chunk_id}]
         )
         
-        # Store metadata in SQL database
         add_transcript_chunk(
             chunk_id=chunk_id,
             video_id=video_id,
@@ -43,7 +39,6 @@ def add_video_data_to_chroma(video_data):
             url=f"{video_url}&t={int(summary['raw_start'])}"
         )
     
-    # Store segments in SQL database
     for segment in video_data["segments"]:
         add_segment(
             video_id=video_id,
@@ -58,7 +53,6 @@ def query_video_data(query_text, k=5):
     """Query video data from Chroma database and enrich with SQL metadata."""
     db = get_chroma_db()
     
-    # Search the vector DB
     results = db.similarity_search_with_score(query_text, k=k)
     
     enriched_results = []

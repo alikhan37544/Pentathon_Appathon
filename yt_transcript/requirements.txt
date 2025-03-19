@@ -1,4 +1,4 @@
-youtube-transcript-api
+YouTube Data API v3
 pytube
 langchain
 langchain-community

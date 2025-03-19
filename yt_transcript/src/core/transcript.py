@@ -1,27 +1,72 @@
 """Transcript processing functions for the YouTube transcript RAG application."""
+# Add at the top of the file
+from dotenv import load_dotenv
+import os
 
-from youtube_transcript_api import YouTubeTranscriptApi
+load_dotenv()  # Load environment variables from .env file
+api_key = os.getenv('YOUTUBE_API_KEY')
+
+
+import requests
 from langchain_ollama import OllamaLLM
 
 from yt_transcript.src.utils.constants import LLM_MODEL, DEFAULT_CHUNK_SIZE
 from yt_transcript.src.utils.templates import get_summarization_prompt, get_segmentation_prompt
 from yt_transcript.src.utils.formatting import format_timestamp, extract_json_from_llm_response
 
-def fetch_transcript(video_id):
-    """Fetch transcript for a YouTube video."""
+# Function to fetch transcript using YouTube Data API v3
+def fetch_transcript_youtube_api(video_id, api_key):
+    """Fetch transcript (captions) using YouTube Data API v3."""
     try:
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
-        return transcript_list
+        # Step 1: Get caption ID
+        captions_url = f"https://www.googleapis.com/youtube/v3/captions?videoId={video_id}&part=snippet&key={api_key}"
+        captions_response = requests.get(captions_url)
+        captions_data = captions_response.json()
+
+        if "items" not in captions_data or not captions_data["items"]:
+            print("No captions found for this video.")
+            return None
+
+        caption_id = captions_data["items"][0]["id"]  # Assuming first caption track
+
+        # Step 2: Download the caption transcript
+        transcript_url = f"https://www.googleapis.com/youtube/v3/captions/{caption_id}?tfmt=srv1&key={api_key}"
+        transcript_response = requests.get(transcript_url)
+
+        if transcript_response.status_code != 200:
+            print(f"Failed to fetch transcript: {transcript_response.text}")
+            return None
+
+        transcript_data = transcript_response.text  # Raw transcript in XML format
+        return parse_youtube_transcript(transcript_data)
+
     except Exception as e:
         print(f"Error fetching transcript: {str(e)}")
         return None
 
+# Function to parse YouTube transcript XML
+def parse_youtube_transcript(xml_data):
+    """Parse YouTube XML transcript and convert it into structured JSON."""
+    import xml.etree.ElementTree as ET
+    root = ET.fromstring(xml_data)
+
+    transcript_list = []
+    for node in root.findall("text"):
+        text = node.text
+        start = float(node.get("start", 0))
+        duration = float(node.get("dur", 0))
+        
+        transcript_list.append({
+            "text": text,
+            "start": start,
+            "duration": duration
+        })
+
+    return transcript_list
+
 def generate_full_transcript(transcript_data):
     """Generate a full text transcript from transcript data."""
-    full_text = ""
-    for item in transcript_data:
-        full_text += f"{item['text']} "
-    return full_text.strip()
+    return " ".join(item["text"] for item in transcript_data).strip()
 
 def chunk_transcript(transcript_data, chunk_size=DEFAULT_CHUNK_SIZE):
     """Chunk transcript data for processing."""
@@ -67,51 +112,40 @@ def segment_transcript(llm, full_transcript, transcript_data):
     """Segment the transcript into logical sections."""
     prompt_template = get_segmentation_prompt()
     
-    # Fix: Ensure the transcript isn't too long - truncate if needed
+    # Ensure the transcript isn't too long
     max_length = 5000  # Adjust based on your model's context window
     if len(full_transcript) > max_length:
         full_transcript = full_transcript[:max_length] + "..."
     
-    # Fix: Create a proper dictionary for formatting
     prompt = prompt_template.format(transcript=full_transcript)
     
     response = llm.invoke(prompt).strip()
     
-    # Extract JSON from response
     import re
-    json_match = re.search(r'\[.*?\]', response, re.DOTALL)
+    json_match = re.search(r"\[.*?\]", response, re.DOTALL)
     if not json_match:
         print("Failed to extract JSON response for segmentation")
         return []
     
     try:
-        import json
         segments = json.loads(json_match.group(0))
         
-        # Fix: Convert timestamp strings to seconds for the last segment
-        if segments and len(segments) > 0 and transcript_data and len(transcript_data) > 0:
+        if segments and transcript_data:
             for i, segment in enumerate(segments):
-                # Handle end_time for the last segment
                 if i == len(segments) - 1:
-                    segment["end_time"] = format_timestamp(transcript_data[-1]['start'] + transcript_data[-1]['duration'])
+                    segment["end_time"] = format_timestamp(transcript_data[-1]["start"] + transcript_data[-1]["duration"])
         
         return segments
     except json.JSONDecodeError as e:
         print(f"Failed to parse JSON response for segmentation: {e}")
-        print(f"JSON Response was: {response}")
         return []
-
-# Add these changes to the process_transcript function
 
 def process_transcript(video_id, transcript_data):
     """Process transcript data - segment only (no summarization)."""
-    # Initialize LLM
     llm = OllamaLLM(model=LLM_MODEL)
     
-    # Generate full transcript text
     full_transcript = generate_full_transcript(transcript_data)
     
-    # Chunk transcript but skip summarization
     chunks = chunk_transcript(transcript_data)
     summaries = []
     
@@ -126,12 +160,10 @@ def process_transcript(video_id, transcript_data):
             "raw_start": start_time,
             "raw_end": end_time,
             "text": text,
-            # No summarization needed
-            "summary": text  # Just use the raw text as the "summary" field to maintain compatibility
+            "summary": text  # Just use the raw text as the "summary" field
         }
         summaries.append(summary)
     
-    # Segment the transcript into logical sections
     segments = segment_transcript(llm, full_transcript, transcript_data)
     
     return {

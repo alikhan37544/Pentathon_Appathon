@@ -8,7 +8,6 @@ def init_db():
     conn = sqlite3.connect(SQL_DB_PATH)
     cursor = conn.cursor()
     
-    # Create table for transcript chunks
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS transcript_chunks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,7 +20,6 @@ def init_db():
     )
     ''')
     
-    # Create table for segments
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS segments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
