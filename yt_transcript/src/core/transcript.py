@@ -3,9 +3,9 @@
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_ollama import OllamaLLM
 
-from src.utils.constants import LLM_MODEL, DEFAULT_CHUNK_SIZE
-from src.utils.templates import get_summarization_prompt, get_segmentation_prompt
-from src.utils.formatting import format_timestamp, extract_json_from_llm_response
+from yt_transcript.src.utils.constants import LLM_MODEL, DEFAULT_CHUNK_SIZE
+from yt_transcript.src.utils.templates import get_summarization_prompt, get_segmentation_prompt
+from yt_transcript.src.utils.formatting import format_timestamp, extract_json_from_llm_response
 
 def fetch_transcript(video_id):
     """Fetch transcript for a YouTube video."""
@@ -101,20 +101,34 @@ def segment_transcript(llm, full_transcript, transcript_data):
         print(f"JSON Response was: {response}")
         return []
 
+# Add these changes to the process_transcript function
+
 def process_transcript(video_id, transcript_data):
-    """Process transcript data - summarize and segment."""
-    # Initialize Llama model
+    """Process transcript data - segment only (no summarization)."""
+    # Initialize LLM
     llm = OllamaLLM(model=LLM_MODEL)
     
     # Generate full transcript text
     full_transcript = generate_full_transcript(transcript_data)
     
-    # Chunk and summarize transcript
+    # Chunk transcript but skip summarization
     chunks = chunk_transcript(transcript_data)
     summaries = []
     
     for chunk in chunks:
-        summary = summarize_chunk(llm, chunk)
+        text = " ".join([item['text'] for item in chunk])
+        start_time = chunk[0]['start']
+        end_time = chunk[-1]['start'] + chunk[-1]['duration']
+        
+        summary = {
+            "start_time": format_timestamp(start_time),
+            "end_time": format_timestamp(end_time),
+            "raw_start": start_time,
+            "raw_end": end_time,
+            "text": text,
+            # No summarization needed
+            "summary": text  # Just use the raw text as the "summary" field to maintain compatibility
+        }
         summaries.append(summary)
     
     # Segment the transcript into logical sections

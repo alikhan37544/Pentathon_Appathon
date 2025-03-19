@@ -4,10 +4,10 @@ import argparse
 import json
 import os
 
-from src.core.youtube import get_video_info
-from src.core.transcript import fetch_transcript, process_transcript
-from src.core.vector_store import add_video_data_to_chroma, query_video_data
-from src.utils.constants import VIDEOS_DATA_PATH
+from yt_transcript.src.core.youtube import get_video_info
+from yt_transcript.src.core.transcript import fetch_transcript, process_transcript
+from yt_transcript.src.core.vector_store import add_video_data_to_chroma, query_video_data
+from yt_transcript.src.utils.constants import VIDEOS_DATA_PATH
 
 def process_video_command(args):
     """Process a YouTube video."""
@@ -21,6 +21,7 @@ def process_video_command(args):
     
     # Get transcript
     transcript_data = fetch_transcript(video_id)
+    print(transcript_data)
     if not transcript_data:
         print(f"Failed to get transcript for video {video_id}")
         return
@@ -55,11 +56,17 @@ def query_command(args):
     
     for i, result in enumerate(results):
         print(f"Result {i+1}:")
-        print(f"Title: {result['metadata'].get('title', result['metadata'].get('video_title', 'Unknown'))}")
+        print(f"Title: {result['metadata'].get('title', 'Unknown')}")
+        print(f"Video ID: {result['metadata'].get('video_id', 'Unknown')}")
         print(f"URL: {result['metadata']['url']}")
-        print(f"Type: {result['metadata']['type']}")
+        
+        # Format time nicely for display
         if 'start_time' in result['metadata']:
-            print(f"Timestamp: {result['metadata']['start_time']}")
+            from src.utils.formatting import format_timestamp
+            start_time = format_timestamp(result['metadata']['start_time']) if isinstance(result['metadata']['start_time'], (int, float)) else result['metadata']['start_time']
+            print(f"Timestamp: {start_time}")
+            
+        print(f"Relevance Score: {result['relevance']}")
         print(f"Content: {result['content'][:200]}...\n")
 
 def setup_argparse():
