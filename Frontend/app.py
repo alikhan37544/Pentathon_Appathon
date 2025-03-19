@@ -22,15 +22,18 @@ APP_CONFIG = {
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-# Configure CORS properly with explicit settings
-CORS(app, resources={r"/*": {"origins": "*"}})
+# More explicit CORS configuration
+CORS(app, 
+     resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}},
+     supports_credentials=False,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
-# Also add CORS headers directly to responses for extra assurance
+# Keep the after_request hook for extra assurance
 @app.after_request
 def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
     return response
 
 # Global variable to track evaluation status
@@ -97,9 +100,13 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/start_evaluation', methods=['POST'])
+@app.route('/start_evaluation', methods=['POST', 'OPTIONS'])
 def start_evaluation():
     """Start the evaluation process"""
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     global evaluation_status
     
     # Don't start if already running

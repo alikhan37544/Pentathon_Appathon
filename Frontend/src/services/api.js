@@ -1,19 +1,25 @@
 const API_URL = process.env.NODE_ENV === 'production' 
   ? '/api' 
-  : 'http://127.0.0.1:5000';
+  : 'http://localhost:5000';  // Try this instead of 127.0.0.1
 
 export const api = {
   // Start the evaluation process
   startEvaluation: async () => {
     try {
+      console.log(`Sending request to ${API_URL}/start_evaluation`);
       const response = await fetch(`${API_URL}/start_evaluation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
-        credentials: 'omit'  // Use 'omit' to not include credentials
+        mode: 'cors',
+        credentials: 'omit'
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return await response.json();
     } catch (error) {
       console.error('Error starting evaluation:', error);
@@ -24,7 +30,15 @@ export const api = {
   // Check evaluation status
   checkStatus: async () => {
     try {
-      const response = await fetch(`${API_URL}/status`);
+      const response = await fetch(`${API_URL}/status`, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return await response.json();
     } catch (error) {
       console.error('Error checking status:', error);
@@ -35,7 +49,15 @@ export const api = {
   // Check if results exist
   checkResultsExist: async () => {
     try {
-      const response = await fetch(`${API_URL}/check_results_exist`);
+      const response = await fetch(`${API_URL}/check_results_exist`, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return await response.json();
     } catch (error) {
       console.error('Error checking if results exist:', error);
@@ -51,7 +73,15 @@ export const api = {
   // View results
   viewResults: async () => {
     try {
-      const response = await fetch(`${API_URL}/results`);
+      const response = await fetch(`${API_URL}/results`, {
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       return await response.text();
     } catch (error) {
       console.error('Error viewing results:', error);
