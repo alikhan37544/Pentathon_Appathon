@@ -1,0 +1,23 @@
+.login-page {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background-color: #f0f2f5;
+  background-image: url('/background.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.login-page .login-container {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  max-width: 450px;
+  width: 100%;
+}
+
+@media (max-width: 500px) {
+  .login-page {
+    padding: 1rem;
+  }
+}

@@ -1,11 +1,11 @@
 :root {
-  --primary-color: #00a4bd;
+  --primary-color: #7231e3;
   --primary-light: #e5f5f8;
-  --primary-dark: #0077a8;
-  --secondary-color: #ff7a59;
-  --secondary-light: #ffebe4;
-  --secondary-hover: #ff8f73;
-  --dark-blue: #2e475d;
+  --primary-dark: #5518c3;
+  --secondary-color: #4d69fa;
+  --secondary-light: #e4e7ff;
+  --secondary-hover: #3d59ea;
+  --dark-blue: #131c31;
   --text-dark: #33475b;
   --text-light: #7c98b6;
   --border-color: #cbd6e2;
@@ -13,8 +13,8 @@
   --success-color: #00bda5;
   --warning-color: #f5c26b;
   --error-color: #e74c3c;
-  --gradient-start: #00a4bd;
-  --gradient-end: #00bda5;
+  --gradient-start: #5a23c8;
+  --gradient-end: #00c3a5;
   --box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -40,14 +40,11 @@ body {
 .app-content {
   flex: 1;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
 }
 
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -95,12 +92,12 @@ body {
 
 .btn-secondary {
   background-color: transparent;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  color: white;
+  border: 1px solid white;
 }
 
 .btn-secondary:hover {
-  background-color: var(--primary-light);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .btn-lg {
@@ -168,6 +165,6 @@ body {
   }
   
   .app-content {
-    padding: 1.5rem 1rem;
+    padding-top: 0;
   }
 }
