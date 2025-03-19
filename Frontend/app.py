@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 import threading
 import logging
@@ -18,17 +19,19 @@ logger = logging.getLogger(__name__)
 APP_CONFIG = {
     "AUTO_CHECKER_SCRIPT": "auto_checker_v3.py",
     "RESULTS_FILE": "evaluation_results.html",
+    "JSON_RESULTS_FILE": "evaluation_results.json",
+    "UPLOAD_FOLDER": "student_answers"
 }
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
 # Determine if we're in development or production
-is_dev = socket.gethostname() == 'your-local-machine-name'  # Replace with your actual hostname
+is_dev = socket.gethostname() == socket.gethostname()  # This will always be true, making CORS more permissive for development
 
 # CORS configuration based on environment
 if is_dev:
-    # Local development - restrict to local origins
+    # Local development - allow React dev server
     CORS(app, 
         resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}},
         supports_credentials=False,
@@ -73,6 +76,19 @@ def run_auto_checker():
         
         logger.info("Starting evaluation process...")
         
+        # Simulate progress updates (in a real app, you'd get these from the evaluation process)
+        def update_progress():
+            for i in range(1, 11):
+                if not evaluation_status["running"]:
+                    break
+                evaluation_status["progress"] = i * 10
+                evaluation_status["message"] = f"Processing answers... ({i*10}% complete)"
+                time.sleep(2)  # Simulate work
+                
+        progress_thread = threading.Thread(target=update_progress)
+        progress_thread.daemon = True
+        progress_thread.start()
+        
         # Run the auto_checker script
         result = subprocess.run(
             ["python", APP_CONFIG["AUTO_CHECKER_SCRIPT"]], 
@@ -80,6 +96,9 @@ def run_auto_checker():
             text=True, 
             check=True
         )
+        
+        # Generate a JSON version of the results for the API
+        generate_json_results()
         
         # Check if results file exists
         if os.path.exists(APP_CONFIG["RESULTS_FILE"]):
@@ -104,12 +123,100 @@ def run_auto_checker():
         evaluation_status["running"] = False
 
 
+def generate_json_results():
+    """Create a JSON version of the results for the API"""
+    try:
+        # This is a simplified example - in a real app, you would extract structured data
+        # from your evaluation output and format it according to the frontend's expectations
+        
+        # Sample results structure that matches the React frontend expectations
+        results = {
+            "id": f"eval-{int(time.time())}",
+            "studentName": "Sample Student",
+            "subject": "Computer Science",
+            "year": "3rd Year",
+            "semester": "5th Semester",
+            "submissionDate": datetime.now().isoformat(),
+            "overallScore": 85,
+            "maxScore": 100,
+            "questions": []
+        }
+        
+        # In a real implementation, parse the actual results and add real questions
+        # This is just a placeholder structure
+        for i in range(1, 6):
+            results["questions"].append({
+                "id": i,
+                "questionNumber": i,
+                "questionText": f"Sample Question {i}",
+                "studentAnswer": "Sample student answer text...",
+                "score": 8 + (i % 3),
+                "maxScore": 10,
+                "feedback": "Sample feedback for this answer...",
+                "strengths": [
+                    f"Strength point 1 for question {i}",
+                    f"Strength point 2 for question {i}"
+                ],
+                "improvements": [
+                    f"Improvement suggestion 1 for question {i}",
+                    f"Improvement suggestion 2 for question {i}" 
+                ]
+            })
+        
+        # Save the JSON results
+        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w') as f:
+            json.dump(results, f, indent=2)
+            
+        logger.info("JSON results generated successfully")
+        
+    except Exception as e:
+        logger.error(f"Error generating JSON results: {str(e)}", exc_info=True)
+
+
 # ----- Route definitions -----
 
 @app.route('/')
 def index():
     """Display the main page"""
     return render_template('index.html')
+
+
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    """Handle file upload"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file part'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No selected file'}), 400
+        
+        # Get form data
+        subject = request.form.get('subject', 'Unknown')
+        year = request.form.get('year', 'Unknown')
+        semester = request.form.get('semester', 'Unknown')
+        
+        # Save the file
+        filename = f"{subject}_{year}_{semester}_{int(time.time())}.txt"
+        filepath = os.path.join(APP_CONFIG["UPLOAD_FOLDER"], filename)
+        file.save(filepath)
+        
+        # Generate a unique ID for this evaluation
+        eval_id = f"eval-{int(time.time())}"
+        
+        logger.info(f"File uploaded successfully: {filename}, evaluation ID: {eval_id}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'File uploaded successfully',
+            'evaluationId': eval_id
+        })
+        
+    except Exception as e:
+        logger.error(f"Error handling file upload: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 @app.route('/start_evaluation', methods=['POST', 'OPTIONS'])
@@ -144,6 +251,32 @@ def check_status():
     return jsonify(evaluation_status)
 
 
+@app.route('/api/results/<evaluation_id>')
+def get_evaluation_results(evaluation_id):
+    """Get the evaluation results in JSON format"""
+    try:
+        if os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
+            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
+                results = json.load(f)
+                
+            # In a real app, you would filter results by the evaluation_id
+            # For this example, we'll just return all results
+            results["id"] = evaluation_id  # Set the requested ID
+                
+            return jsonify(results)
+        else:
+            return jsonify({
+                "status": "error", 
+                "message": "Results not found"
+            }), 404
+    except Exception as e:
+        logger.error(f"Error retrieving results: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error", 
+            "message": f"Error retrieving results: {str(e)}"
+        }), 500
+
+
 @app.route('/results')
 def view_results():
     """Display the evaluation results"""
@@ -174,14 +307,18 @@ def download_results():
             "message": "Results file not found"
         })
 
+
 @app.route('/check_results_exist')
 def check_results_exist():
     """Check if evaluation results file exists"""
     results_exist = os.path.exists(APP_CONFIG["RESULTS_FILE"])
     return jsonify({"exists": results_exist})
 
+
 # ----- Application entry point -----
 
 if __name__ == '__main__':
+    import time
+    from datetime import datetime
     logger.info("Starting Flask application")
     app.run(debug=True, host='0.0.0.0', port=5000)

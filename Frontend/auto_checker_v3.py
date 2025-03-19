@@ -17,23 +17,20 @@ def load_text_file(file_path):
 def evaluate_answer(llm, question, answer_key, student_answer):
     """
     Calls the deepseek‑r1 model via LangChain Ollama with a prompt containing the question,
-    answer key, and student's answer. It then parses the returned output which is assumed to have:
+    answer key, and student's answer. It then parses the returned output for structured feedback.
     
-        <think>
-        ... internal chain-of-thought ...
-        </think>
-        Score: <score out of 100>
-        Reasoning: <evaluation text>
-    
-    Returns a tuple: (score, reasoning, model_thoughts)
+    Returns a tuple: (score, feedback, strengths, improvements, model_thoughts)
     """
     prompt = (
         f"Question: {question}\n"
         f"Answer Key: {answer_key}\n"
         f"Student Answer: {student_answer}\n\n"
-        "Please evaluate the student's answer in detail. Your output already contains a chain-of-thought "
-        "enclosed within <think> and </think> markers, followed by the final evaluation. "
-        "The final evaluation should include a 'Score:' (score out of 100) and 'Reasoning:' for your judgment."
+        "Please evaluate the student's answer in detail. First, think through your evaluation step by step within <think> </think> tags.\n\n"
+        "After your thinking, provide your final evaluation in this exact format:\n"
+        "Score: [numerical score out of 100]\n"
+        "Feedback: [overall evaluation of the answer]\n"
+        "Strengths: [bullet-point list of strengths in the answer]\n"
+        "Areas for Improvement: [bullet-point list of areas where the answer could be improved]\n"
     )
     
     result = llm(prompt)
@@ -41,7 +38,9 @@ def evaluate_answer(llm, question, answer_key, student_answer):
     # Initialize default values
     model_thoughts = ""
     score = "Error"
-    reasoning = ""
+    feedback = ""
+    strengths = ""
+    improvements = ""
     
     # Extract model_thoughts if present
     if "<think>" in result and "</think>" in result:
@@ -51,22 +50,38 @@ def evaluate_answer(llm, question, answer_key, student_answer):
     else:
         post_think = result.strip()
     
-    # Now, attempt to extract score and reasoning from the remaining text.
-    if "Score:" in post_think and "Reasoning:" in post_think:
-        try:
-            score_part = post_think.split("Score:")[1].split("Reasoning:")[0].strip().rstrip(',')
-            reasoning = post_think.split("Reasoning:")[1].strip()
+    # Extract the structured components
+    try:
+        # Extract Score
+        if "Score:" in post_think:
+            score_text = post_think.split("Score:")[1].split("\n")[0].strip()
             try:
-                score = int(score_part)
+                score = int(score_text)
             except ValueError:
-                score = score_part  # Leave as string if conversion fails.
-        except Exception as e:
-            score = "Error"
-            reasoning = f"Error parsing evaluation output: {str(e)}"
-    else:
-        reasoning = post_think
-
-    return score, reasoning, model_thoughts
+                score = score_text
+        
+        # Extract Feedback
+        if "Feedback:" in post_think:
+            if "Strengths:" in post_think:
+                feedback = post_think.split("Feedback:")[1].split("Strengths:")[0].strip()
+            else:
+                feedback = post_think.split("Feedback:")[1].strip()
+        
+        # Extract Strengths
+        if "Strengths:" in post_think:
+            if "Areas for Improvement:" in post_think:
+                strengths = post_think.split("Strengths:")[1].split("Areas for Improvement:")[0].strip()
+            else:
+                strengths = post_think.split("Strengths:")[1].strip()
+        
+        # Extract Areas for Improvement
+        if "Areas for Improvement:" in post_think:
+            improvements = post_think.split("Areas for Improvement:")[1].strip()
+    
+    except Exception as e:
+        return score, f"Error parsing evaluation: {str(e)}", "", "", model_thoughts
+    
+    return score, feedback, strengths, improvements, model_thoughts
 
 def main():
     # Load questions and answer keys
@@ -99,7 +114,7 @@ def main():
         for i, (question, answer_key) in enumerate(zip(questions, answers), start=1):
             student_answer = student_answers[i-1] if i-1 < len(student_answers) else "No answer provided."
             print(f"Evaluating {student_name} - Question {i}...")
-            score, reasoning, model_thoughts = evaluate_answer(llm, question, answer_key, student_answer)
+            score, feedback, strengths, improvements, model_thoughts = evaluate_answer(llm, question, answer_key, student_answer)
             
             evaluations.append({
                 "Student Name": student_name,
@@ -107,19 +122,138 @@ def main():
                 "Answer Key": answer_key,
                 "Student Answer": student_answer,
                 "Score": score,
-                "Reasoning": reasoning,
+                "Feedback": feedback,
+                "Strengths": strengths,
+                "Areas for Improvement": improvements,
                 "Model_Thoughts": model_thoughts
             })
     
-    # Create a DataFrame from evaluations.
+    # Create a DataFrame from evaluations
     df = pd.DataFrame(evaluations)
-    
-    # Write the DataFrame as an HTML table. The 'escape=False' allows any HTML (if needed) to be rendered as content.
-    html_content = df.to_html(escape=False, index=False, border=1)
-    
+
+    # Generate fancy HTML output
+    html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .evaluation-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            padding: 20px;
+            border-left: 5px solid #4285f4;
+        }
+        .student-info {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .student-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4285f4;
+        }
+        .score {
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .score-high {
+            color: #0f9d58;
+        }
+        .score-medium {
+            color: #f4b400;
+        }
+        .score-low {
+            color: #db4437;
+        }
+        .question {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .section {
+            margin-top: 15px;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .strengths {
+            background-color: #e6f4ea;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        .improvements {
+            background-color: #fce8e6;
+            border-radius: 4px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Evaluation Results</h1>
+"""
+
+    # Group by student name
+    for student, group in df.groupby("Student Name"):
+        for _, row in group.iterrows():
+            score_class = "score-high" if isinstance(row["Score"], (int, float)) and row["Score"] >= 80 else \
+                         "score-medium" if isinstance(row["Score"], (int, float)) and row["Score"] >= 60 else \
+                         "score-low"
+            
+            html_content += f"""
+            <div class="evaluation-card">
+                <div class="student-info">
+                    <div class="student-name">{row["Student Name"]}</div>
+                    <div class="score {score_class}">Score: {row["Score"]}</div>
+                </div>
+                
+                <div class="question">{row["Question"]}</div>
+                
+                <div class="section">
+                    <div class="section-title">Student Answer:</div>
+                    <p>{row["Student Answer"]}</p>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Feedback:</div>
+                    <p>{row["Feedback"]}</p>
+                </div>
+                
+                <div class="section strengths">
+                    <div class="section-title">Strengths:</div>
+                    <p>{row["Strengths"]}</p>
+                </div>
+                
+                <div class="section improvements">
+                    <div class="section-title">Areas for Improvement:</div>
+                    <p>{row["Areas for Improvement"]}</p>
+                </div>
+            </div>
+            """
+
+    html_content += """
+</body>
+</html>
+"""
+
     with open("evaluation_results.html", "w", encoding="utf-8") as html_file:
         html_file.write(html_content)
-    
+
     print("Evaluation complete. Results saved to evaluation_results.html")
 
 if __name__ == "__main__":
