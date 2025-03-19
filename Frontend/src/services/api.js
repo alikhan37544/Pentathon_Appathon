@@ -1,6 +1,8 @@
 const API_URL = process.env.NODE_ENV === 'production' 
   ? '/api' 
-  : 'http://localhost:5000';  // Try this instead of 127.0.0.1
+  : window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000'
+    : `http://${window.location.hostname}:5000`;  // Use the same hostname as frontend
 
 export const api = {
   // Start the evaluation process

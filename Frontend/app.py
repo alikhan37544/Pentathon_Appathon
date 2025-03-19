@@ -2,6 +2,7 @@ import os
 import subprocess
 import threading
 import logging
+import socket
 from flask import Flask, render_template, jsonify, request, send_file
 from flask_cors import CORS
 
@@ -22,18 +23,29 @@ APP_CONFIG = {
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-# More explicit CORS configuration
-CORS(app, 
-     resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}},
-     supports_credentials=False,
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+# Determine if we're in development or production
+is_dev = socket.gethostname() == 'your-local-machine-name'  # Replace with your actual hostname
 
-# Keep the after_request hook for extra assurance
+# CORS configuration based on environment
+if is_dev:
+    # Local development - restrict to local origins
+    CORS(app, 
+        resources={r"/*": {"origins": ["http://localhost:5173", "http://127.0.0.1:5173"]}},
+        supports_credentials=False,
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+else:
+    # SSH/remote environment - allow all origins during development
+    # (For production, replace '*' with specific allowed domains)
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
+# Remove or update the after_request function to avoid conflicts
 @app.after_request
 def after_request(response):
-    response.headers.set('Access-Control-Allow-Origin', '*')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+    # Only add these headers if they're not already set by Flask-CORS
+    if not response.headers.get('Access-Control-Allow-Origin'):
+        response.headers.set('Access-Control-Allow-Origin', '*')
+        response.headers.set('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
     return response
 
 # Global variable to track evaluation status
