@@ -3,9 +3,9 @@
 import uuid
 from langchain_chroma import Chroma
 
-from src.core.embeddings import get_embedding_function
-from src.core.sql_store import init_db, add_transcript_chunk, add_segment, get_chunk_metadata
-from src.utils.constants import CHROMA_PATH
+from yt_transcript.src.core.embeddings import get_embedding_function
+from yt_transcript.src.core.sql_store import init_db, add_transcript_chunk, add_segment, get_chunk_metadata
+from yt_transcript.src.utils.constants import CHROMA_PATH
 
 def get_chroma_db():
     """Get the Chroma database instance."""

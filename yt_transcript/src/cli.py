@@ -4,10 +4,10 @@ import argparse
 import json
 import os
 
-from src.core.youtube import get_video_info
-from src.core.transcript import fetch_transcript, process_transcript
-from src.core.vector_store import add_video_data_to_chroma, query_video_data
-from src.utils.constants import VIDEOS_DATA_PATH
+from yt_transcript.src.core.youtube import get_video_info
+from yt_transcript.src.core.transcript import fetch_transcript, process_transcript
+from yt_transcript.src.core.vector_store import add_video_data_to_chroma, query_video_data
+from yt_transcript.src.utils.constants import VIDEOS_DATA_PATH
 
 def process_video_command(args):
     """Process a YouTube video."""

@@ -1,7 +1,7 @@
 """SQL database operations for storing transcript metadata."""
 
 import sqlite3
-from src.utils.constants import SQL_DB_PATH
+from yt_transcript.src.utils.constants import SQL_DB_PATH
 
 def init_db():
     """Initialize the SQL database with necessary tables."""

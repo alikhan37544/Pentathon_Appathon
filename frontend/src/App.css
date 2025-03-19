@@ -1,0 +1,118 @@
+.App {
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.App-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: #007bff;
+  color: white;
+}
+
+.input-group {
+  display: flex;
+  margin: 20px 0;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px 0 0 5px;
+}
+
+.input-group button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+}
+
+.loading {
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.error-message {
+  padding: 10px;
+  margin: 20px 0;
+  background-color: #ffdddd;
+  color: #ff0000;
+  border-radius: 5px;
+}
+
+.processed-info {
+  margin-top: 30px;
+}
+
+.video-details {
+  display: flex;
+  margin: 20px 0;
+}
+
+.video-details img {
+  width: 200px;
+  margin-right: 20px;
+}
+
+.segments {
+  margin-top: 20px;
+}
+
+.segment {
+  padding: 10px;
+  background: #f8f8f8;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.results-list {
+  margin-top: 20px;
+}
+
+.result-card {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.result-card .timestamp {
+  font-weight: bold;
+}
+
+.result-card .content {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.result-card .relevance {
+  color: #666;
+  text-align: right;
+}

@@ -3,9 +3,9 @@
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_ollama import OllamaLLM
 
-from src.utils.constants import LLM_MODEL, DEFAULT_CHUNK_SIZE
-from src.utils.templates import get_summarization_prompt, get_segmentation_prompt
-from src.utils.formatting import format_timestamp, extract_json_from_llm_response
+from yt_transcript.src.utils.constants import LLM_MODEL, DEFAULT_CHUNK_SIZE
+from yt_transcript.src.utils.templates import get_summarization_prompt, get_segmentation_prompt
+from yt_transcript.src.utils.formatting import format_timestamp, extract_json_from_llm_response
 
 def fetch_transcript(video_id):
     """Fetch transcript for a YouTube video."""
