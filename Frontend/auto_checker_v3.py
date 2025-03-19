@@ -26,11 +26,12 @@ def evaluate_answer(llm, question, answer_key, student_answer):
         f"Answer Key: {answer_key}\n"
         f"Student Answer: {student_answer}\n\n"
         "Please evaluate the student's answer in detail. First, think through your evaluation step by step within <think> </think> tags.\n\n"
-        "After your thinking, provide your final evaluation in this exact format:\n"
-        "Score: [numerical score out of 100]\n"
-        "Feedback: [overall evaluation of the answer]\n"
-        "Strengths: [bullet-point list of strengths in the answer]\n"
-        "Areas for Improvement: [bullet-point list of areas where the answer could be improved]\n"
+        "After your thinking, provide your final evaluation following EXACTLY this format:\n"
+        "Score: [PROVIDE ONLY A NUMERICAL SCORE FROM 0 TO 100, WITH NO OTHER TEXT OR SYMBOLS]\n"
+        "Feedback: [overall evaluation of the answer in plain text, no special formatting]\n"
+        "Strengths:\n- [strength point 1]\n- [strength point 2]\n- [etc.]\n"
+        "Areas for Improvement:\n- [improvement point 1]\n- [improvement point 2]\n- [etc.]\n\n"
+        "IMPORTANT: The score MUST be a number between 0-100 with no other text. Do not use a scale of 0-10 or include any symbols, just the numerical value."
     )
     
     result = llm(prompt)
@@ -56,9 +57,21 @@ def evaluate_answer(llm, question, answer_key, student_answer):
         if "Score:" in post_think:
             score_text = post_think.split("Score:")[1].split("\n")[0].strip()
             try:
-                score = int(score_text)
+                # Remove any non-numeric characters that might be present
+                score_text = ''.join(c for c in score_text if c.isdigit() or c == '.')
+                score = float(score_text)
+                
+                # Check if score appears to be on a 0-10 scale and convert if necessary
+                if score <= 10 and score > 0:
+                    # Check if this is likely a 0-10 scale score
+                    score = int(score * 10)
+                
+                # Ensure score is within 0-100 range
+                score = max(0, min(100, score))
+                score = int(score)  # Convert to integer
+                
             except ValueError:
-                score = score_text
+                score = "Error parsing score"
         
         # Extract Feedback
         if "Feedback:" in post_think:
