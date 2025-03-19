@@ -12,52 +12,60 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"
     />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Georgia:wght@400;700&display=swap" rel="stylesheet">
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/main.css') }}"
     />
   </head>
   <body>
+    <!-- Video Background -->
+    <div class="video-background">
+      <video autoplay muted loop playsinline>
+        <source src="{{ url_for('static', filename='css/Backvid.mp4') }}" type="video/mp4">
+        <!-- Fallback if video doesn't load -->
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    
     <div class="container">
-      <div class="alert-container" id="alertContainer"></div>
-
-      <header>
-        <h1>Document & Video Transcript Explorer</h1>
-        <div class="nav-container fade-in">
-          <ul class="nav nav-tabs" id="mainTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link active"
-                id="document-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#document-tab-pane"
-                type="button"
-                role="tab"
-                aria-controls="document-tab-pane"
-                aria-selected="true"
-              >
-                <i class="bi bi-file-text"></i> Document Database
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link"
-                id="transcript-tab"
-                data-bs-toggle="tab"
-                data-bs-target="#transcript-tab-pane"
-                type="button"
-                role="tab"
-                aria-controls="transcript-tab-pane"
-                aria-selected="false"
-              >
-                <i class="bi bi-youtube"></i> Video Transcripts
-              </button>
-            </li>
-          </ul>
-        </div>
+      <header class="py-4 text-center">
+        <h1 class="main-heading">Document & Video Transcript Explorer</h1>
+        <ul class="nav nav-tabs nav-fill" id="mainTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link active"
+              id="document-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#document-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="document-tab-pane"
+              aria-selected="true"
+            >
+              <i class="bi bi-file-text me-2"></i>Document Database
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button
+              class="nav-link"
+              id="transcript-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#transcript-tab-pane"
+              type="button"
+              role="tab"
+              aria-controls="transcript-tab-pane"
+              aria-selected="false"
+            >
+              <i class="bi bi-youtube me-2"></i>Video Transcripts
+            </button>
+          </li>
+        </ul>
       </header>
 
-      <main>
+      <div class="alert-container" id="alertContainer"></div>
+
+      <main class="mt-4">
         <div class="tab-content" id="mainTabContent">
           <!-- Document Database Tab -->
           <div
@@ -67,141 +75,130 @@
             aria-labelledby="document-tab"
             tabindex="0"
           >
-            <div class="translucent-overlay">
-              <div class="row">
-                <!-- Upload Section -->
-                <div class="col-md-6">
-                  <div class="content-card slide-left">
-                    <div class="card-header">
-                      <i class="bi bi-upload"></i>
-                      <h3>Upload Files</h3>
+            <div class="row">
+              <!-- Upload Files Card -->
+              <div class="col-md-6">
+                <div class="content-card slide-left">
+                  <div class="card-header">
+                    <i class="bi bi-upload me-2"></i>
+                    <h3>Upload Files</h3>
+                  </div>
+                  <div class="card-body">
+                    <form
+                      action="{{ url_for('upload_file') }}"
+                      method="post"
+                      enctype="multipart/form-data"
+                      id="uploadForm"
+                    >
+                      <div id="dropArea" class="upload-area">
+                        <i class="bi bi-cloud-arrow-up upload-icon"></i>
+                        <div class="upload-text">Drag & drop files here</div>
+                        <div class="upload-subtext">or click to browse your files</div>
+                      </div>
+                      
+                      <div id="uploadList" class="upload-list" style="display: none;"></div>
+                      
+                      <input
+                        type="file"
+                        class="form-control d-none"
+                        id="file"
+                        name="file"
+                        multiple
+                      />
+                      
+                      <div class="mt-3 text-center">
+                        <button type="submit" class="btn btn-primary">
+                          <i class="bi bi-upload me-2"></i>Upload Files
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <div class="content-card mt-4 slide-left delay-100">
+                  <div class="card-header">
+                    <i class="bi bi-database me-2"></i>
+                    <h3>Database Operations</h3>
+                  </div>
+                  <div class="card-body">
+                    <button id="populateBtn" class="btn btn-primary mb-3">
+                      <i class="bi bi-database-add me-2"></i>Populate Database
+                    </button>
+                    <div id="populateOutput" class="result-container" style="display: none"></div>
+                    <div id="populateLoading" class="loading">
+                      <div class="spinner"></div>
+                      <p>Populating database, please wait...</p>
                     </div>
-                    <div class="card-body">
-                      <form
-                        action="{{ url_for('upload_file') }}"
-                        method="post"
-                        enctype="multipart/form-data"
-                        id="uploadForm"
-                      >
-                        <div class="upload-area" id="dropArea">
-                          <i class="bi bi-file-earmark-pdf upload-icon"></i>
-                          <p class="upload-text">Drop your file(s) here, or click to browse</p>
-                          <p class="upload-subtext">Supports: pdf, txt, doc, docx, csv, json, xml</p>
-                          <input
-                            type="file"
-                            class="form-control visually-hidden"
-                            id="file"
-                            name="file"
-                            multiple
-                          />
-                        </div>
-                        
-                        <div class="upload-list" id="uploadList" style="display: none">
-                          <!-- Upload items will be dynamically added here -->
-                        </div>
-                        
-                        <div class="d-grid gap-2 mt-3">
-                          <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-cloud-arrow-up"></i> Upload Files
-                          </button>
-                        </div>
-                      </form>
+                    <div id="noResultsMessage" class="empty-state">
+                      <i class="bi bi-database-fill-gear empty-state-icon"></i>
+                      <p>Click "Populate Database" to process uploaded files</p>
                     </div>
                   </div>
-                  
-                  <div class="content-card slide-left delay-200">
-                    <div class="card-header">
-                      <i class="bi bi-database"></i>
-                      <h3>Database Operations</h3>
-                    </div>
-                    <div class="card-body">
-                      <button id="populateBtn" class="btn btn-primary w-100">
-                        <i class="bi bi-database-fill-add"></i> Populate Database
-                      </button>
-                      <div id="populateLoading" class="loading mt-3">
-                        <div class="spinner"></div>
-                        <p>Populating database, please wait...</p>
-                      </div>
-                    </div>
+                </div>
+              </div>
+
+              <!-- Files and Query Card -->
+              <div class="col-md-6">
+                <div class="content-card slide-right">
+                  <div class="card-header">
+                    <i class="bi bi-file-earmark me-2"></i>
+                    <h3>Uploaded Files</h3>
                   </div>
-                  
-                  <div class="content-card slide-left delay-300">
-                    <div class="card-header">
-                      <i class="bi bi-files"></i>
-                      <h3>Uploaded Files</h3>
-                    </div>
-                    <div class="card-body">
-                      <div class="files-list">
-                        {% if data_files %} 
-                          {% for file in data_files %}
-                          <div class="file-item">
-                            <div class="file-icon">
-                              <i class="bi bi-file-earmark-text"></i>
-                            </div>
-                            <div class="file-info">
-                              <div class="file-name">{{ file }}</div>
-                              <div class="file-size">{{ file.split('.')[-1] }} file</div>
-                            </div>
+                  <div class="card-body">
+                    <div class="files-list">
+                      {% if data_files %} 
+                        {% for file in data_files %}
+                        <div class="file-item slide-right" data-animation-delay="{{ loop.index0 * 0.1 }}">
+                          <div class="file-icon">
+                            <i class="bi bi-file-earmark-text"></i>
                           </div>
-                          {% endfor %} 
-                        {% else %}
-                          <div class="empty-state">
-                            <i class="bi bi-inbox empty-state-icon"></i>
-                            <p>No files uploaded yet</p>
+                          <div class="file-info">
+                            <div class="file-name">{{ file }}</div>
+                            <div class="file-size">{{ file.split('.')[-1].upper() }} File</div>
                           </div>
-                        {% endif %}
-                      </div>
+                          <span class="badge bg-secondary">{{ file.split('.')[-1] }}</span>
+                        </div>
+                        {% endfor %} 
+                      {% else %}
+                        <div class="empty-state">
+                          <i class="bi bi-files empty-state-icon"></i>
+                          <p>No files uploaded yet</p>
+                        </div>
+                      {% endif %}
                     </div>
                   </div>
                 </div>
 
-                <!-- Query Section -->
-                <div class="col-md-6">
-                  <div class="content-card slide-right">
-                    <div class="card-header">
-                      <i class="bi bi-search"></i>
-                      <h3>Query Documents</h3>
-                    </div>
-                    <div class="card-body">
-                      <form id="queryDocumentsForm" class="query-form">
-                        <div class="form-group">
-                          <label for="documentQuery" class="form-label">Enter your document query:</label>
-                          <textarea
-                            class="form-control"
-                            id="documentQuery"
-                            name="query"
-                            rows="4"
-                            placeholder="What would you like to know about your documents?"
-                          ></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-dark">
-                          <i class="bi bi-search"></i> Search Documents
-                        </button>
-                      </form>
-                      <div id="queryDocumentsLoading" class="loading">
-                        <div class="spinner"></div>
-                        <p>Processing query, please wait...</p>
-                      </div>
-                    </div>
+                <div class="content-card mt-4 slide-right delay-100">
+                  <div class="card-header">
+                    <i class="bi bi-search me-2"></i>
+                    <h3>Query Documents</h3>
                   </div>
-                  
-                  <div class="content-card slide-right delay-200">
-                    <div class="card-header">
-                      <i class="bi bi-card-text"></i>
-                      <h3>Results</h3>
-                    </div>
-                    <div class="card-body">
-                      <div id="populateOutput" class="result-container" style="display: none"></div>
-                      <div
-                        id="queryDocumentsResults"
-                        class="result-container"
-                        style="display: none"
-                      ></div>
-                      <div id="noResultsMessage" class="empty-state">
-                        <i class="bi bi-search empty-state-icon"></i>
-                        <p>Enter a query to see results</p>
+                  <div class="card-body">
+                    <form id="queryDocumentsForm" class="query-form">
+                      <div class="form-group">
+                        <label for="documentQuery" class="form-label">Enter your document query:</label>
+                        <textarea
+                          class="form-control"
+                          id="documentQuery"
+                          name="query"
+                          rows="3"
+                          placeholder="Enter your query here..."
+                        ></textarea>
                       </div>
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-2"></i>Search Documents
+                      </button>
+                    </form>
+                    <div id="queryDocumentsLoading" class="loading">
+                      <div class="spinner"></div>
+                      <p>Processing query, please wait...</p>
                     </div>
+                    <div
+                      id="queryDocumentsResults"
+                      class="result-container mt-3"
+                      style="display: none"
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -216,130 +213,125 @@
             aria-labelledby="transcript-tab"
             tabindex="0"
           >
-            <div class="translucent-overlay">
-              <div class="row">
-                <!-- Video Processing -->
-                <div class="col-md-6">
-                  <div class="content-card slide-left">
-                    <div class="card-header">
-                      <i class="bi bi-youtube"></i>
-                      <h3>Process YouTube Video</h3>
-                    </div>
-                    <div class="card-body">
-                      <form id="processVideoForm">
-                        <div class="form-group">
-                          <label for="videoId" class="form-label">YouTube Video ID:</label>
-                          <div class="video-input">
-                            <div class="video-input-prefix">youtube.com/watch?v=</div>
-                            <input
-                              type="text"
-                              class="form-control"
-                              id="videoId"
-                              name="videoId"
-                              placeholder="dQw4w9WgXcQ"
-                            />
-                          </div>
-                          <div class="form-text mt-2">
-                            Enter the ID from a YouTube video URL
-                          </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 mt-3">
-                          <i class="bi bi-play-btn"></i> Process Video
-                        </button>
-                      </form>
-                      <div id="processVideoLoading" class="loading">
-                        <div class="spinner"></div>
-                        <p>Processing video, please wait...</p>
-                      </div>
-                    </div>
+            <div class="row">
+              <!-- Process Video Card -->
+              <div class="col-md-6">
+                <div class="content-card slide-left">
+                  <div class="card-header">
+                    <i class="bi bi-youtube me-2"></i>
+                    <h3>Process YouTube Video</h3>
                   </div>
-
-                  <div class="content-card slide-left delay-200">
-                    <div class="card-header">
-                      <i class="bi bi-search"></i>
-                      <h3>Query Video Transcripts</h3>
-                    </div>
-                    <div class="card-body">
-                      <form id="queryTranscriptsForm">
-                        <div class="form-group">
-                          <label for="transcriptQuery" class="form-label">Search in transcripts:</label>
-                          <textarea
+                  <div class="card-body">
+                    <form id="processVideoForm" class="video-container">
+                      <div class="form-group">
+                        <label for="videoId" class="form-label">YouTube Video ID:</label>
+                        <div class="video-input">
+                          <div class="video-input-prefix">youtube.com/watch?v=</div>
+                          <input
+                            type="text"
                             class="form-control"
-                            id="transcriptQuery"
-                            name="query"
-                            rows="4"
-                            placeholder="What would you like to find in your video transcripts?"
-                          ></textarea>
+                            id="videoId"
+                            name="videoId"
+                            placeholder="dQw4w9WgXcQ"
+                          />
                         </div>
-                        <button type="submit" class="btn btn-dark w-100 mt-2">
-                          <i class="bi bi-search"></i> Search Transcripts
-                        </button>
-                      </form>
-                      <div id="queryTranscriptsLoading" class="loading">
-                        <div class="spinner"></div>
-                        <p>Searching transcripts, please wait...</p>
+                        <div class="form-text mt-1">
+                          Enter the ID from a YouTube video URL
+                        </div>
                       </div>
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-play-btn me-2"></i>Process Video
+                      </button>
+                    </form>
+                    <div id="processVideoLoading" class="loading">
+                      <div class="spinner"></div>
+                      <p>Processing video, please wait...</p>
                     </div>
                   </div>
                 </div>
 
-                <!-- Video Results -->
-                <div class="col-md-6">
-                  <div class="content-card slide-right">
-                    <div class="card-header">
-                      <i class="bi bi-card-heading"></i>
-                      <h3>Video Results</h3>
+                <div class="content-card mt-4 slide-left delay-100">
+                  <div class="card-header">
+                    <i class="bi bi-search me-2"></i>
+                    <h3>Query Video Transcripts</h3>
+                  </div>
+                  <div class="card-body">
+                    <form id="queryTranscriptsForm" class="query-form">
+                      <div class="form-group">
+                        <label for="transcriptQuery" class="form-label">Search in transcripts:</label>
+                        <textarea
+                          class="form-control"
+                          id="transcriptQuery"
+                          name="query"
+                          rows="3"
+                          placeholder="Enter your search query here..."
+                        ></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-2"></i>Search Transcripts
+                      </button>
+                    </form>
+                    <div id="queryTranscriptsLoading" class="loading">
+                      <div class="spinner"></div>
+                      <p>Searching transcripts, please wait...</p>
                     </div>
-                    <div class="card-body">
-                      <!-- Video Info Area -->
-                      <div id="videoInfo" style="display: none">
-                        <h4 class="mb-3">Video Information</h4>
-                        <div class="video-info">
-                          <img
-                            id="videoThumbnail"
-                            src=""
-                            alt="Video Thumbnail"
-                            class="video-thumbnail"
-                          />
-                          <div class="video-details">
-                            <div id="videoTitle" class="video-title"></div>
-                            <div id="videoChannel" class="video-channel"></div>
-                            <a
-                              id="videoLink"
-                              href="#"
-                              target="_blank"
-                              class="btn btn-primary btn-sm"
-                            >
-                              <i class="bi bi-youtube"></i> Watch on YouTube
-                            </a>
-                          </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Results Card -->
+              <div class="col-md-6">
+                <div class="content-card slide-right">
+                  <div class="card-header">
+                    <i class="bi bi-card-list me-2"></i>
+                    <h3>Results</h3>
+                  </div>
+                  <div class="card-body">
+                    <div id="noVideoResultsMessage" class="empty-state">
+                      <i class="bi bi-camera-video empty-state-icon"></i>
+                      <p>Process a video or search transcripts to see results</p>
+                    </div>
+                  
+                    <!-- Video Info Area -->
+                    <div id="videoInfo" class="mb-4 slide-right" style="display: none">
+                      <h4>Video Information</h4>
+                      <div class="video-info">
+                        <img
+                          id="videoThumbnail"
+                          src=""
+                          alt="Video Thumbnail"
+                          class="video-thumbnail"
+                        />
+                        <div class="video-details">
+                          <div id="videoTitle" class="video-title"></div>
+                          <div id="videoChannel" class="video-channel"></div>
+                          <a
+                            id="videoLink"
+                            href="#"
+                            target="_blank"
+                            class="btn btn-primary btn-sm"
+                          >
+                            <i class="bi bi-youtube me-1"></i>Watch on YouTube
+                          </a>
                         </div>
                       </div>
+                    </div>
 
-                      <!-- Segments Area -->
-                  <!-- Video Segments with Slider -->
-<div id="videoSegments" style="display: none">
-  <h4 class="slide-right">Video Segments</h4>
-  <div class="segment-slider">
-    <div id="segmentsList" class="segment-track"></div>
-    <div class="slider-controls">
-      <button class="slider-btn" id="prevSlide"><i class="bi bi-chevron-left"></i></button>
-      <button class="slider-btn" id="nextSlide"><i class="bi bi-chevron-right"></i></button>
-    </div>
-  </div>
-</div>
+                    <!-- Video Segments with Slider -->
+                    <div id="videoSegments" style="display: none">
+                      <h4 class="slide-right">Video Segments</h4>
+                      <div class="segment-slider">
+                        <div id="segmentsList" class="segment-track"></div>
+                        <div class="slider-controls">
+                          <button class="slider-btn" id="prevSlide"><i class="bi bi-chevron-left"></i></button>
+                          <button class="slider-btn" id="nextSlide"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                      </div>
+                    </div>
 
-                      <!-- Transcript Search Results -->
-                      <div id="transcriptResults" style="display: none">
-                        <h4 class="mb-3 mt-4">Transcript Search Results</h4>
-                        <div id="transcriptResultsList"></div>
-                      </div>
-                      
-                      <!-- No Results State -->
-                      <div id="noVideoResultsMessage" class="empty-state">
-                        <i class="bi bi-film empty-state-icon"></i>
-                        <p>Process a YouTube video or search transcripts to see results</p>
-                      </div>
+                    <!-- Transcript Search Results -->
+                    <div id="transcriptResults" style="display: none">
+                      <div id="transcriptResultsList"></div>
                     </div>
                   </div>
                 </div>
@@ -349,8 +341,8 @@
         </div>
       </main>
 
-      <footer class="text-center mt-4 mb-4 fade-in" style="animation-delay: 0.6s">
-        <p>&copy; 2025 Document & Video Transcript Explorer</p>
+      <footer class="mt-5 text-center text-white">
+        <p>&copy; Document & Video Transcript Explorer</p>
       </footer>
     </div>
 

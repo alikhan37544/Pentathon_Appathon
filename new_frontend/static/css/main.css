@@ -2,16 +2,54 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('/static/css/Backdrop.jpg') no-repeat center center fixed;
-    background-size: cover;
     min-height: 100vh;
     color: #1a2e54;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Video Background */
+.video-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.video-background video {
+    position: absolute;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
+}
+
+/* Add overlay for better readability */
+.video-background::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    position: relative;
+    z-index: 1;
 }
 
 /* Header styles */
@@ -19,25 +57,121 @@ header {
     text-align: center;
     padding: 40px 0 20px;
 }
-
+/* Updated header styles with formal font */
 header h1 {
     font-size: 2.8rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: #ffffff; /* Change to white color */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Enhanced shadow for better contrast */
-    font-family: 'Playfair Display', serif;
-    letter-spacing: 0.5px;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-family: 'Georgia', 'Times New Roman', serif; /* More formal serif font */
+    letter-spacing: 1px;
     position: relative;
     display: inline-block;
-    padding: 10px 25px;
-    background: linear-gradient(135deg, #1a2e54, #3a5b94);
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #1c3863, #285a9a);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     animation: glow 3s ease-in-out infinite alternate, slideDown 1s ease-out forwards;
     overflow: hidden;
+    text-transform: uppercase; /* Makes text look more formal */
 }
 
+/* Updated content card with light translucent blue */
+.content-card {
+    background: rgba(210, 230, 255, 0.25); /* Light translucent blue */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    margin-bottom: 30px;
+    border: 1px solid rgba(162, 196, 255, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: slideIn 0.6s ease-out forwards;
+}
+
+/* Updated card header with darker blue */
+.card-header {
+    background: linear-gradient(to right, #1c3863, #285a9a);
+    color: white;
+    padding: 15px 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Updated form controls for blue theme */
+.form-control {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(28, 56, 99, 0.2);
+}
+
+.form-control:focus {
+    border-color: #1c3863;
+    box-shadow: 0 0 0 3px rgba(28, 56, 99, 0.2);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+/* Updated buttons for blue theme */
+.btn-primary {
+    background: #285a9a;
+}
+
+.btn-primary:hover {
+    background: #3670b9;
+    box-shadow: 0 5px 15px rgba(40, 90, 154, 0.4);
+}
+
+/* Updated upload area with blue theme */
+.upload-area {
+    border: 2px dashed rgba(28, 56, 99, 0.4);
+    background: rgba(210, 230, 255, 0.2);
+}
+
+.upload-area:hover {
+    background: rgba(210, 230, 255, 0.3);
+    border-color: #285a9a;
+}
+
+/* Updated segment card with blue theme */
+.segment-card {
+    background: rgba(210, 230, 255, 0.25);
+    border: 1px solid rgba(162, 196, 255, 0.3);
+}
+
+.segment-card:hover {
+    box-shadow: 0 10px 25px rgba(40, 90, 154, 0.15);
+    border-color: rgba(162, 196, 255, 0.5);
+}
+
+/* Updated file items with blue theme */
+.file-item {
+    background: rgba(210, 230, 255, 0.25);
+}
+
+.file-item:hover {
+    background: rgba(210, 230, 255, 0.4);
+}
+
+/* Updated file icon */
+.file-icon {
+    background: linear-gradient(to right, #1c3863, #285a9a);
+}
+
+/* Override for any other background elements */
+.search-result, 
+.segment-item,
+.video-info,
+.upload-item {
+    background: rgba(210, 230, 255, 0.25);
+}
+
+.search-result:hover, 
+.segment-item:hover {
+    background: rgba(210, 230, 255, 0.4);
+}
 /* Animation for the glowing effect */
 @keyframes glow {
     0% {
