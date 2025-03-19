@@ -31,7 +31,16 @@ ChartJS.register(
   RadialLinearScale,
   PointElement,
   LineElement,
-  Filler
+  Filler,
+  {
+    id: 'customAnimation',
+    beforeInit: function(chart) {
+      chart.options.animation = {
+        duration: 1000,
+        easing: 'easeOutBounce'
+      };
+    }
+  }
 );
 
 const ResultsViewPage = () => {
@@ -40,6 +49,14 @@ const ResultsViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { downloadResults } = useResults();
+  const [openQuestions, setOpenQuestions] = useState({});
+
+  const toggleQuestion = (questionId) => {
+    setOpenQuestions(prev => ({
+      ...prev,
+      [questionId]: !prev[questionId]
+    }));
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -54,14 +71,25 @@ const ResultsViewPage = () => {
           throw new Error('No evaluation results available yet. Please run an evaluation first.');
         }
         
-        // Now fetch the JSON data instead of HTML
+        // Now fetch the JSON data
         const data = await api.getStudentResults();
         
         if (!data || !data.students || data.students.length === 0) {
           throw new Error('No student results data received from server');
         }
         
-        setStudents(data.students);
+        console.log('Loaded student data:', data.students);
+        
+        // Ensure each student has the required properties
+        const validatedStudents = data.students.map((student, index) => ({
+          ...student,
+          id: student.id || `student-${index}`,
+          questionNumber: student.questionNumber || index + 1,
+          // Ensure other required properties have defaults if missing
+        }));
+        
+        setStudents(validatedStudents);
+        setCurrentStudentIndex(0);
         setLoading(false);
       } catch (err) {
         console.error('Failed to load results:', err);
@@ -100,6 +128,8 @@ const ResultsViewPage = () => {
           backgroundColor: 'rgba(67, 97, 238, 0.7)',
           borderColor: 'rgba(67, 97, 238, 1)',
           borderWidth: 1,
+          barThickness: 'flex',
+          maxBarThickness: 40
         },
         {
           label: 'Maximum',
@@ -107,6 +137,8 @@ const ResultsViewPage = () => {
           backgroundColor: 'rgba(220, 220, 220, 0.7)',
           borderColor: 'rgba(220, 220, 220, 1)',
           borderWidth: 1,
+          barThickness: 'flex',
+          maxBarThickness: 40
         }
       ]
     };
@@ -133,6 +165,8 @@ const ResultsViewPage = () => {
           pointBorderColor: '#fff',
           pointHoverBackgroundColor: '#fff',
           pointHoverBorderColor: 'rgba(67, 97, 238, 1)',
+          pointRadius: 4,
+          pointHoverRadius: 6
         }
       ]
     };
@@ -301,9 +335,15 @@ const ResultsViewPage = () => {
                   
                   <div className="questions-accordion">
                     {currentStudent.questions.map((question, index) => (
-                      <div className="accordion-item" key={question.id}>
-                        <details>
-                          <summary className="accordion-header">
+                      <div className="accordion-item" key={question.id || index}>
+                        <details open={openQuestions[question.id || index]}>
+                          <summary 
+                            className="accordion-header" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleQuestion(question.id || index);
+                            }}
+                          >
                             <div className="question-info">
                               <span className="question-number">Question {question.questionNumber}</span>
                               <span className="question-score">
