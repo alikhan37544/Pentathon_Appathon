@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- Upload Files Card -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Upload Files</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Select files to upload to the data directory:</label>
+                        <input type="file" class="form-control" id="file" name="file" multiple>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload me-2"></i>Upload Files
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-database me-2"></i>Database Operations</h5>
+            </div>
+            <div class="card-body">
+                <button id="populateBtn" class="btn btn-success mb-3">
+                    <i class="bi bi-database-add me-2"></i>Populate Database
+                </button>
+                <div id="populateOutput" class="result-container" style="display: none;"></div>
+                <div id="populateLoading" class="loading">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Populating database, please wait...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Files and Query Card -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark me-2"></i>Uploaded Files</h5>
+            </div>
+            <div class="card-body">
+                <div class="file-list">
+                    {% if data_files %}
+                        {% for file in data_files %}
+                        <div class="file-item">
+                            <div class="file-name">
+                                <i class="bi bi-file-earmark-text file-icon"></i>{{ file }}
+                            </div>
+                            <span class="badge bg-secondary">{{ file.split('.')[-1] }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No files uploaded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-search me-2"></i>Query Database</h5>
+            </div>
+            <div class="card-body">
+                <form id="queryForm">
+                    <div class="mb-3">
+                        <label for="query" class="form-label">Enter your query:</label>
+                        <textarea class="form-control" id="query" name="query" rows="3" placeholder="Enter your query here..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-search me-2"></i>Run Query
+                    </button>
+                </form>
+                <div id="queryLoading" class="loading">
+                    <div class="spinner-border text-dark" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Processing query, please wait...</p>
+                </div>
+                <div id="queryResults" class="result-container mt-3" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Populate database functionality
+    document.getElementById('populateBtn').addEventListener('click', function() {
+        const loadingDiv = document.getElementById('populateLoading');
+        const outputDiv = document.getElementById('populateOutput');
+        
+        loadingDiv.style.display = 'block';
+        outputDiv.style.display = 'none';
+        
+        fetch('/populate_database', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            outputDiv.style.display = 'block';
+            
+            if (data.success) {
+                showAlert('Database populated successfully', 'success');
+                outputDiv.innerHTML = '<div class="text-success">Database populated successfully!</div>';
+                if (data.output) {
+                    outputDiv.innerHTML += '<hr><pre>' + data.output + '</pre>';
+                }
+            } else {
+                showAlert('Error populating database', 'danger');
+                outputDiv.innerHTML = '<div class="text-danger">Error populating database:</div>';
+                if (data.error) {
+                    outputDiv.innerHTML += '<hr><pre class="text-danger">' + data.error + '</pre>';
+                }
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            outputDiv.style.display = 'block';
+            outputDiv.innerHTML = '<div class="text-danger">Error: ' + error.message + '</div>';
+            showAlert('Error: ' + error.message, 'danger');
+        });
+    });
+
+    // Query database functionality
+    document.getElementById('queryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const query = document.getElementById('query').value.trim();
+        if (!query) {
+            showAlert('Query cannot be empty', 'warning');
+            return;
+        }
+        
+        const loadingDiv = document.getElementById('queryLoading');
+        const resultsDiv = document.getElementById('queryResults');
+        
+        loadingDiv.style.display = 'block';
+        resultsDiv.style.display = 'none';
+        
+        const formData = new FormData();
+        formData.append('query', query);
+        
+        fetch('/query', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingDiv.style.display = 'none';
+            resultsDiv.style.display = 'block';
+            
+            if (data.success) {
+                showAlert('Query executed successfully', 'success');
+                resultsDiv.innerHTML = '<h6>Results for: <span class="text-primary">' + data.query + '</span></h6><hr>';
+                
+                // Format the results
+                if (typeof data.results === 'object') {
+                    resultsDiv.innerHTML += '<pre>' + JSON.stringify(data.results, null, 2) + '</pre>';
+                } else {
+                    resultsDiv.innerHTML += '<pre>' + data.results + '</pre>';
+                }
+            } else {
+                showAlert('Error executing query', 'danger');
+                resultsDiv.innerHTML = '<h6>Error for query: <span class="text-danger">' + data.query + '</span></h6><hr>';
+                resultsDiv.innerHTML += '<pre class="text-danger">' + data.error + '</pre>';
+            }
+        })
+        .catch(error => {
+            loadingDiv.style.display = 'none';
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = '<div class="text-danger">Error: ' + error.message + '</div>';
+            showAlert('Error: ' + error.message, 'danger');
+        });
+    });
+</script>
+{% endblock %}
