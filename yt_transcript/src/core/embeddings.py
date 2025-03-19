@@ -1,6 +1,6 @@
 """Embedding functions for the YouTube transcript RAG application."""
 
-from langchain_ollama import OllamaEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings
 from src.utils.constants import EMBEDDING_MODEL
 
 def get_embedding_function():

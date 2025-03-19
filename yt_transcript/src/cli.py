@@ -56,11 +56,17 @@ def query_command(args):
     
     for i, result in enumerate(results):
         print(f"Result {i+1}:")
-        print(f"Title: {result['metadata'].get('title', result['metadata'].get('video_title', 'Unknown'))}")
+        print(f"Title: {result['metadata'].get('title', 'Unknown')}")
+        print(f"Video ID: {result['metadata'].get('video_id', 'Unknown')}")
         print(f"URL: {result['metadata']['url']}")
-        print(f"Type: {result['metadata']['type']}")
+        
+        # Format time nicely for display
         if 'start_time' in result['metadata']:
-            print(f"Timestamp: {result['metadata']['start_time']}")
+            from src.utils.formatting import format_timestamp
+            start_time = format_timestamp(result['metadata']['start_time']) if isinstance(result['metadata']['start_time'], (int, float)) else result['metadata']['start_time']
+            print(f"Timestamp: {start_time}")
+            
+        print(f"Relevance Score: {result['relevance']}")
         print(f"Content: {result['content'][:200]}...\n")
 
 def setup_argparse():

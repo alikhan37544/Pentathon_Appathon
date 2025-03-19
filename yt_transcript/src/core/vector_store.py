@@ -1,8 +1,10 @@
 """Vector store operations for the YouTube transcript RAG application."""
 
+import uuid
 from langchain_chroma import Chroma
 
 from src.core.embeddings import get_embedding_function
+from src.core.sql_store import init_db, add_transcript_chunk, add_segment, get_chunk_metadata
 from src.utils.constants import CHROMA_PATH
 
 def get_chroma_db():
@@ -11,80 +13,65 @@ def get_chroma_db():
     return Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
 def add_video_data_to_chroma(video_data):
-    """Add video data to Chroma database."""
+    """Add video data to Chroma database and SQL database."""
     db = get_chroma_db()
+    init_db()  # Initialize SQL database if not exists
     
     video_id = video_data["video_id"]
     video_url = video_data["video_info"]["url"]
+    video_title = video_data["video_info"]["title"]
     
-    # Add overall video summary
-    full_summary = " ".join([summary["summary"] for summary in video_data["summaries"]])
-    db.add_texts(
-        texts=[full_summary],
-        metadatas=[{
-            "type": "video_summary",
-            "video_id": video_id,
-            "url": video_url,
-            "title": video_data["video_info"]["title"]
-        }]
-    )
-    
-    # Add each summary chunk
+    # Process transcript chunks (use raw text instead of summaries)
     for summary in video_data["summaries"]:
-        db.add_texts(
-            texts=[summary["summary"]],
-            metadatas=[{
-                "type": "video_chunk", 
-                "video_id": video_id,
-                "url": f"{video_url}&t={int(summary['raw_start'])}",
-                "start_time": summary["start_time"],
-                "end_time": summary["end_time"],
-                "title": video_data["video_info"]["title"]
-            }]
-        )
-    
-    # Add each segment
-    for segment in video_data["segments"]:
-        # Find summaries that overlap with this segment
-        segment_text = " ".join([
-            s["summary"] for s in video_data["summaries"] 
-            if (s["raw_start"] >= float(segment["start_time"].replace(":", "")) or 
-                s["raw_end"] <= float(segment["end_time"].replace(":", "")))
-        ])
+        # Generate a unique ID for this chunk
+        chunk_id = str(uuid.uuid4())
         
+        # Store raw text in vector database
         db.add_texts(
-            texts=[f"{segment['title']}: {segment_text}"],
-            metadatas=[{
-                "type": "video_segment",
-                "video_id": video_id,
-                "url": f"{video_url}&t={segment['start_time']}",
-                "title": segment["title"],
-                "start_time": segment["start_time"],
-                "end_time": segment["end_time"],
-                "video_title": video_data["video_info"]["title"]
-            }]
+            texts=[summary["text"]],
+            ids=[chunk_id],
+            metadatas=[{"chunk_id": chunk_id}]
+        )
+        
+        # Store metadata in SQL database
+        add_transcript_chunk(
+            chunk_id=chunk_id,
+            video_id=video_id,
+            start_time=summary["raw_start"],
+            end_time=summary["raw_end"],
+            video_title=video_title,
+            url=f"{video_url}&t={int(summary['raw_start'])}"
         )
     
-    # Remove this line - no longer needed with langchain-chroma
-    # db.persist()
+    # Store segments in SQL database
+    for segment in video_data["segments"]:
+        add_segment(
+            video_id=video_id,
+            title=segment["title"],
+            start_time=segment["start_time"],
+            end_time=segment["end_time"]
+        )
     
-    print(f"Added video {video_id} to database")
+    print(f"Added video {video_id} to databases")
 
 def query_video_data(query_text, k=5):
-    """Query video data from Chroma database."""
+    """Query video data from Chroma database and enrich with SQL metadata."""
     db = get_chroma_db()
     
-    # Search the DB
+    # Search the vector DB
     results = db.similarity_search_with_score(query_text, k=k)
     
-    video_results = []
+    enriched_results = []
     for doc, score in results:
-        metadata = doc.metadata
-        if "video_id" in metadata:
-            video_results.append({
-                "content": doc.page_content,
-                "metadata": metadata,
-                "relevance": score
-            })
+        if "chunk_id" in doc.metadata:
+            chunk_id = doc.metadata["chunk_id"]
+            metadata = get_chunk_metadata(chunk_id)
+            
+            if metadata:
+                enriched_results.append({
+                    "content": doc.page_content,
+                    "metadata": metadata,
+                    "relevance": score
+                })
     
-    return video_results
+    return enriched_results
