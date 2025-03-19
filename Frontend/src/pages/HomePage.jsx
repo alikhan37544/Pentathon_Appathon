@@ -75,6 +75,7 @@ const AnimatedCounter = ({ end, duration = 2000, label, icon }) => {
 };
 
 // Testimonial slider component
+// Updated TestimonialSlider component for HomePage.jsx
 const TestimonialSlider = () => {
   const [current, setCurrent] = useState(0);
   
@@ -88,12 +89,16 @@ const TestimonialSlider = () => {
   
   return (
     <div className="testimonial-slider">
-      <div className="testimonial-container">
+      <div className="testimonial-slides">
         {testimonials.map((testimonial, index) => (
           <div 
             key={testimonial.id} 
             className={`testimonial-slide ${index === current ? 'active' : ''}`}
-            style={{ transform: `translateX(${(index - current) * 100}%)` }}
+            style={{ 
+              opacity: index === current ? 1 : 0,
+              transform: `translateX(${(index - current) * 100}%)`,
+              zIndex: index === current ? 1 : 0
+            }}
           >
             <div className="testimonial-content">
               <p className="testimonial-text">"{testimonial.text}"</p>
@@ -112,6 +117,7 @@ const TestimonialSlider = () => {
             key={index} 
             className={`dot ${index === current ? 'active' : ''}`}
             onClick={() => setCurrent(index)}
+            aria-label={`Go to testimonial ${index + 1}`}
           />
         ))}
       </div>

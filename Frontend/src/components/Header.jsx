@@ -34,7 +34,8 @@ const Header = () => {
           <h1>EduGrader</h1>
         </Link>
         <nav className="header-nav">
-          <Link to="/upload" className="nav-link">Upload Answer Sheet</Link>
+          {/* Fixed upload button */}
+          <Link to="/upload" className="nav-link upload-link">Upload Answer Sheet</Link>
           
           {isLoggedIn ? (
             <div className="user-menu">
