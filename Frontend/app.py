@@ -6,6 +6,8 @@ import logging
 import socket
 from flask import Flask, render_template, jsonify, request, send_file, make_response
 from flask_cors import CORS
+import copy
+
 
 # Configure logging
 logging.basicConfig(
@@ -126,49 +128,79 @@ def run_auto_checker():
 def generate_json_results():
     """Create a JSON version of the results for the API"""
     try:
-        # This is a simplified example - in a real app, you would extract structured data
-        # from your evaluation output and format it according to the frontend's expectations
-        
-        # Sample results structure that matches the React frontend expectations
-        results = {
+        # Base structure for results
+        base_results = {
             "id": f"eval-{int(time.time())}",
-            "studentName": "Sample Student",
             "subject": "Computer Science",
             "year": "3rd Year",
             "semester": "5th Semester",
             "submissionDate": datetime.now().isoformat(),
-            "overallScore": 85,
             "maxScore": 100,
-            "questions": []
         }
         
-        # In a real implementation, parse the actual results and add real questions
-        # This is just a placeholder structure
-        for i in range(1, 6):
-            results["questions"].append({
-                "id": i,
-                "questionNumber": i,
-                "questionText": f"Sample Question {i}",
-                "studentAnswer": "Sample student answer text...",
-                "score": 8 + (i % 3),
-                "maxScore": 10,
-                "feedback": "Sample feedback for this answer...",
-                "strengths": [
-                    f"Strength point 1 for question {i}",
-                    f"Strength point 2 for question {i}"
-                ],
-                "improvements": [
-                    f"Improvement suggestion 1 for question {i}",
-                    f"Improvement suggestion 2 for question {i}" 
-                ]
-            })
+        # Get student names from student_answers directory
+        student_names = []
+        student_answer_dir = os.path.join(os.path.dirname(__file__), 'student_answers')
         
-        # Save the JSON results
-        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w') as f:
-            json.dump(results, f, indent=2)
+        if os.path.exists(student_answer_dir):
+            for file_name in os.listdir(student_answer_dir):
+                if file_name.endswith('.txt'):
+                    student_name = os.path.splitext(file_name)[0]
+                    student_names.append(student_name)
+        
+        # If no student files found, use default names
+        if not student_names:
+            student_names = ["Ali", "Shree", "Ritam"]
+        
+        # Create an array to hold all student results
+        all_students = []
+        
+        # For each student, create personalized results
+        for i, name in enumerate(student_names):
+            student_result = base_results.copy()
+            student_result["id"] = f"{base_results['id']}-{name.lower()}"
+            student_result["studentName"] = name
             
-        logger.info("JSON results generated successfully")
+            # Vary overall scores for different students
+            base_score = 85
+            variation = [-5, 0, 5][i % 3]
+            student_result["overallScore"] = max(0, min(100, base_score + variation))
+            
+            # Create questions array
+            questions = []
+            for j in range(1, 6):  # 5 questions
+                question = {
+                    "id": j,
+                    "questionNumber": j,
+                    "questionText": f"Question {j} about {['climate change', 'photosynthesis', 'relativity', 'AI ethics', 'industrial revolution'][j % 5]}",
+                    "studentAnswer": f"{name}'s answer to question {j}...",
+                    "score": max(1, min(10, 8 + ((i + j) % 3))),  # Score between 7-10
+                    "maxScore": 10,
+                    "feedback": f"Feedback for {name}'s answer to question {j}...",
+                    "strengths": [
+                        f"Key strength in {name}'s answer to question {j}",
+                        f"Another positive aspect in {name}'s work"
+                    ],
+                    "improvements": [
+                        f"Area where {name} could improve in question {j}",
+                        f"Additional suggestion for enhancing the answer"
+                    ]
+                }
+                questions.append(question)
+                
+            student_result["questions"] = questions
+            all_students.append(student_result)
         
+        # Save the first student's data as the base JSON
+        # (This maintains backwards compatibility with existing code)
+        if all_students:
+            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w') as f:
+                json.dump(all_students[0], f, indent=2)
+                
+            logger.info("JSON results generated successfully")
+        else:
+            logger.warning("No student data generated")
+            
     except Exception as e:
         logger.error(f"Error generating JSON results: {str(e)}", exc_info=True)
 
@@ -323,47 +355,52 @@ def check_results_exist():
 def get_students_results():
     """Get all students' evaluation results in JSON format"""
     try:
+        student_names = ["Ali", "Shree", "Ritam"]
+        base_results = None
+        
         # Check if the JSON results file exists
         if not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
-            # If not, try to generate it from the HTML results
+            # If not, try to generate it
             generate_json_results()
             
-            # Check again - if still doesn't exist, return error
-            if not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
-                return jsonify({
-                    "status": "error", 
-                    "message": "Results not found"
-                }), 404
-        
-        # Read the JSON results file
-        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
-            results = json.load(f)
-        
-        # For this example, we'll simulate multiple students by creating variations
-        # In a real app, you'd have actual student data from your database
+        # Load base results structure
+        if os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
+            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
+                base_results = json.load(f)
+        else:
+            return jsonify({"status": "error", "message": "Results not found"}), 404
+            
+        # Generate results for all students
         students = []
         
-        # Use the existing result as a template for our first student
-        first_student = results.copy()
-        first_student["studentName"] = "Ali"  # From Ali.txt in student_answers folder
-        students.append(first_student)
-        
-        # Create a second student with slightly modified data
-        second_student = results.copy()
-        second_student["id"] = f"eval-{int(time.time())-100}"
-        second_student["studentName"] = "Shree"  # From Shree.txt in student_answers folder
-        second_student["overallScore"] = min(second_student["maxScore"], second_student["overallScore"] + 5)
-        
-        # Modify question scores for second student
-        for question in second_student["questions"]:
-            # Slightly vary scores, keeping within max score bounds
-            question["score"] = min(question["maxScore"], question["score"] + ([-1, 0, 1][question["id"] % 3]))
-            # Slightly different feedback
-            question["feedback"] = f"Slightly different feedback for {second_student['studentName']}'s answer."
+        for i, name in enumerate(student_names):
+            student_data = copy.deepcopy(base_results)  # Use deepcopy for nested structures
+            student_data["id"] = f"eval-{int(time.time())}-{name.lower()}"
+            student_data["studentName"] = name
             
-        students.append(second_student)
-        
-        # Return all students data
+            # Adjust overall score to create variation
+            variation = [-5, 0, 10][i % 3]
+            student_data["overallScore"] = max(0, min(student_data["maxScore"], student_data["overallScore"] + variation))
+            
+            # Modify questions for each student
+            for question in student_data["questions"]:
+                # Vary scores
+                score_adjust = [-1, 0, 1][((i + question["id"]) % 3)]
+                question["score"] = max(0, min(question["maxScore"], question["score"] + score_adjust))
+                
+                # Personalize feedback and strengths/improvements
+                question["feedback"] = f"Feedback for {name}'s answer to question {question['questionNumber']}."
+                question["strengths"] = [
+                    f"Strength point 1 for {name} on question {question['questionNumber']}", 
+                    f"Strength point 2 for {name} on question {question['questionNumber']}"
+                ]
+                question["improvements"] = [
+                    f"Improvement area 1 for {name} on question {question['questionNumber']}", 
+                    f"Improvement area 2 for {name} on question {question['questionNumber']}"
+                ]
+                
+            students.append(student_data)
+            
         return jsonify({"students": students})
         
     except Exception as e:
