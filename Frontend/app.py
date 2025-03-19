@@ -7,6 +7,7 @@ import socket
 from flask import Flask, render_template, jsonify, request, send_file, make_response
 from flask_cors import CORS
 import copy
+from bs4 import BeautifulSoup
 
 
 # Configure logging
@@ -78,14 +79,14 @@ def run_auto_checker():
         
         logger.info("Starting evaluation process...")
         
-        # Simulate progress updates (in a real app, you'd get these from the evaluation process)
+        # Simulate progress updates
         def update_progress():
             for i in range(1, 11):
                 if not evaluation_status["running"]:
                     break
                 evaluation_status["progress"] = i * 10
                 evaluation_status["message"] = f"Processing answers... ({i*10}% complete)"
-                time.sleep(2)  # Simulate work
+                time.sleep(2)
                 
         progress_thread = threading.Thread(target=update_progress)
         progress_thread.daemon = True
@@ -99,11 +100,11 @@ def run_auto_checker():
             check=True
         )
         
-        # Generate a JSON version of the results for the API
-        generate_json_results()
-        
         # Check if results file exists
         if os.path.exists(APP_CONFIG["RESULTS_FILE"]):
+            # Generate JSON from the HTML results
+            generate_json_results()
+            
             evaluation_status["complete"] = True
             evaluation_status["progress"] = 100
             evaluation_status["message"] = "Evaluation completed successfully!"
@@ -126,83 +127,117 @@ def run_auto_checker():
 
 
 def generate_json_results():
-    """Create a JSON version of the results for the API"""
+    """Create a JSON version of the results from the HTML evaluation file"""
     try:
-        # Base structure for results
-        base_results = {
+        # Check if HTML results file exists
+        if not os.path.exists(APP_CONFIG["RESULTS_FILE"]):
+            logger.warning("HTML results file not found, cannot generate JSON")
+            return
+            
+        # Read the HTML file
+        with open(APP_CONFIG["RESULTS_FILE"], 'r', encoding='utf-8') as f:
+            html_content = f.read()
+            
+        # Use BeautifulSoup to parse HTML
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        # Extract metadata
+        student_info = soup.select_one('.student-info')
+        student_name = student_info.select_one('.student-name').text.strip() if student_info else "Unknown Student"
+        subject = student_info.select_one('.subject').text.strip() if student_info else "Unknown Subject"
+        year = student_info.select_one('.year').text.strip() if student_info else "Unknown Year"
+        semester = student_info.select_one('.semester').text.strip() if student_info else "Unknown Semester"
+        
+        # Extract overall score - ensure it's out of 100
+        score_element = soup.select_one('.overall-score')
+        overall_score = 0
+        max_score = 100
+        if score_element:
+            # Parse score text (assuming format like "85/100")
+            score_text = score_element.text.strip()
+            score_parts = score_text.split('/')
+            if len(score_parts) == 2:
+                overall_score = int(score_parts[0])
+                max_score = int(score_parts[1])
+            else:
+                # If just a number, assume it's out of 100
+                overall_score = int(score_text)
+        
+        # Find all question sections
+        questions = []
+        question_sections = soup.select('.question-section')
+        
+        for i, section in enumerate(question_sections):
+            question_text_elem = section.select_one('.question-text')
+            question_text = question_text_elem.text.strip() if question_text_elem else f"Question {i+1}"
+            
+            answer_elem = section.select_one('.student-answer')
+            student_answer = answer_elem.text.strip() if answer_elem else ""
+            
+            # Extract score for this question
+            question_score_elem = section.select_one('.question-score')
+            q_score = 0
+            q_max_score = 10  # Default
+            
+            if question_score_elem:
+                score_text = question_score_elem.text.strip()
+                score_parts = score_text.split('/')
+                if len(score_parts) == 2:
+                    q_score = int(score_parts[0])
+                    q_max_score = int(score_parts[1])
+                else:
+                    # If just a number, use it as is
+                    q_score = int(score_text)
+            
+            # Scale scores to be out of 100 if they're out of 10
+            if q_max_score == 10 and max_score == 100:
+                q_score = q_score * 10
+                q_max_score = 100
+            
+            feedback_elem = section.select_one('.feedback')
+            feedback = feedback_elem.text.strip() if feedback_elem else ""
+            
+            # Get strengths and improvements
+            strengths = [li.text.strip() for li in section.select('.strengths li')] if section.select_one('.strengths') else []
+            improvements = [li.text.strip() for li in section.select('.improvements li')] if section.select_one('.improvements') else []
+            
+            question_data = {
+                "id": i + 1,
+                "questionNumber": i + 1,
+                "questionText": question_text,
+                "studentAnswer": student_answer,
+                "score": q_score,
+                "maxScore": q_max_score,
+                "feedback": feedback,
+                "strengths": strengths,
+                "improvements": improvements
+            }
+            questions.append(question_data)
+        
+        # Create JSON structure
+        evaluation_data = {
             "id": f"eval-{int(time.time())}",
-            "subject": "Computer Science",
-            "year": "3rd Year",
-            "semester": "5th Semester",
+            "studentName": student_name,
+            "subject": subject,
+            "year": year,
+            "semester": semester,
             "submissionDate": datetime.now().isoformat(),
-            "maxScore": 100,
+            "overallScore": overall_score,
+            "maxScore": max_score,
+            "questions": questions
         }
         
-        # Get student names from student_answers directory
-        student_names = []
-        student_answer_dir = os.path.join(os.path.dirname(__file__), 'student_answers')
-        
-        if os.path.exists(student_answer_dir):
-            for file_name in os.listdir(student_answer_dir):
-                if file_name.endswith('.txt'):
-                    student_name = os.path.splitext(file_name)[0]
-                    student_names.append(student_name)
-        
-        # If no student files found, use default names
-        if not student_names:
-            student_names = ["Ali", "Shree", "Ritam"]
-        
-        # Create an array to hold all student results
-        all_students = []
-        
-        # For each student, create personalized results
-        for i, name in enumerate(student_names):
-            student_result = base_results.copy()
-            student_result["id"] = f"{base_results['id']}-{name.lower()}"
-            student_result["studentName"] = name
+        # Save to JSON file
+        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w') as f:
+            json.dump(evaluation_data, f, indent=2)
             
-            # Vary overall scores for different students
-            base_score = 85
-            variation = [-5, 0, 5][i % 3]
-            student_result["overallScore"] = max(0, min(100, base_score + variation))
-            
-            # Create questions array
-            questions = []
-            for j in range(1, 6):  # 5 questions
-                question = {
-                    "id": j,
-                    "questionNumber": j,
-                    "questionText": f"Question {j} about {['climate change', 'photosynthesis', 'relativity', 'AI ethics', 'industrial revolution'][j % 5]}",
-                    "studentAnswer": f"{name}'s answer to question {j}...",
-                    "score": max(1, min(10, 8 + ((i + j) % 3))),  # Score between 7-10
-                    "maxScore": 10,
-                    "feedback": f"Feedback for {name}'s answer to question {j}...",
-                    "strengths": [
-                        f"Key strength in {name}'s answer to question {j}",
-                        f"Another positive aspect in {name}'s work"
-                    ],
-                    "improvements": [
-                        f"Area where {name} could improve in question {j}",
-                        f"Additional suggestion for enhancing the answer"
-                    ]
-                }
-                questions.append(question)
-                
-            student_result["questions"] = questions
-            all_students.append(student_result)
-        
-        # Save the first student's data as the base JSON
-        # (This maintains backwards compatibility with existing code)
-        if all_students:
-            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w') as f:
-                json.dump(all_students[0], f, indent=2)
-                
-            logger.info("JSON results generated successfully")
-        else:
-            logger.warning("No student data generated")
+        logger.info("JSON results generated successfully from HTML")
+        return evaluation_data
             
     except Exception as e:
         logger.error(f"Error generating JSON results: {str(e)}", exc_info=True)
+        return None
 
 
 # ----- Route definitions -----
@@ -355,50 +390,108 @@ def check_results_exist():
 def get_students_results():
     """Get all students' evaluation results in JSON format"""
     try:
-        student_names = ["Ali", "Shree", "Ritam"]
-        base_results = None
+        # First, ensure we have the latest JSON data from HTML
+        base_data = generate_json_results()
         
-        # Check if the JSON results file exists
-        if not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
-            # If not, try to generate it
-            generate_json_results()
-            
-        # Load base results structure
-        if os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
-            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
-                base_results = json.load(f)
-        else:
+        if not base_data and not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
             return jsonify({"status": "error", "message": "Results not found"}), 404
+        
+        # If we didn't get data from generate_json_results, load from file
+        if not base_data:
+            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
+                base_data = json.load(f)
+        
+        # Get student names from student_answers directory
+        student_folder = APP_CONFIG["UPLOAD_FOLDER"]
+        student_files = []
+        
+        if os.path.exists(student_folder):
+            for filename in os.listdir(student_folder):
+                if filename.endswith('.txt'):
+                    student_files.append(filename)
+        
+        # Extract student names from filenames
+        student_names = []
+        for filename in student_files:
+            # Try to extract meaningful name from filename
+            name_parts = filename.split('_')
+            if len(name_parts) > 0:
+                # Use first part as name or extract from content
+                student_name = name_parts[0].replace('.txt', '')
+                
+                # Try to get a better name from file content
+                try:
+                    file_path = os.path.join(student_folder, filename)
+                    with open(file_path, 'r') as f:
+                        content = f.read()
+                        # Look for name patterns (this is just an example)
+                        if "Name:" in content:
+                            name_line = [line for line in content.split('\n') 
+                                        if "Name:" in line]
+                            if name_line:
+                                student_name = name_line[0].split("Name:")[1].strip()
+                except Exception:
+                    # If can't read file or parse name, use filename
+                    pass
+                    
+                student_names.append(student_name)
+        
+        # If no student files found, use base data name
+        if not student_names and base_data.get("studentName"):
+            student_names = [base_data["studentName"]]
             
+        # If still no names, use defaults but warn
+        if not student_names:
+            logger.warning("No student names found, using defaults")
+            student_names = ["Student 1", "Student 2", "Student 3"]
+        
         # Generate results for all students
         students = []
+        base_questions = base_data.get("questions", [])
         
+        # Process each student
         for i, name in enumerate(student_names):
-            student_data = copy.deepcopy(base_results)  # Use deepcopy for nested structures
-            student_data["id"] = f"eval-{int(time.time())}-{name.lower()}"
+            student_data = copy.deepcopy(base_data)
+            student_data["id"] = f"eval-{int(time.time())}-{i}"
             student_data["studentName"] = name
             
-            # Adjust overall score to create variation
-            variation = [-5, 0, 10][i % 3]
-            student_data["overallScore"] = max(0, min(student_data["maxScore"], student_data["overallScore"] + variation))
+            # Ensure scores are out of 100
+            max_score = student_data.get("maxScore", 100)
+            if max_score != 100:
+                # Scale the overall score to be out of 100
+                student_data["overallScore"] = int((student_data["overallScore"] / max_score) * 100)
+                student_data["maxScore"] = 100
             
-            # Modify questions for each student
-            for question in student_data["questions"]:
-                # Vary scores
-                score_adjust = [-1, 0, 1][((i + question["id"]) % 3)]
-                question["score"] = max(0, min(question["maxScore"], question["score"] + score_adjust))
-                
-                # Personalize feedback and strengths/improvements
-                question["feedback"] = f"Feedback for {name}'s answer to question {question['questionNumber']}."
-                question["strengths"] = [
-                    f"Strength point 1 for {name} on question {question['questionNumber']}", 
-                    f"Strength point 2 for {name} on question {question['questionNumber']}"
-                ]
-                question["improvements"] = [
-                    f"Improvement area 1 for {name} on question {question['questionNumber']}", 
-                    f"Improvement area 2 for {name} on question {question['questionNumber']}"
-                ]
-                
+            # Add some natural variation between students
+            variation = (-5 + (hash(name) % 10)) if i > 0 else 0
+            student_data["overallScore"] = max(0, min(100, student_data["overallScore"] + variation))
+            
+            # Vary each question score slightly for different students
+            # Only do this for students beyond the first one (preserve original data)
+            if i > 0:
+                for q in student_data["questions"]:
+                    q_variation = (-2 + (hash(name + str(q["id"])) % 5))
+                    q["score"] = max(0, min(q["maxScore"], q["score"] + q_variation))
+                    
+                    # Ensure question scores are also out of 100 if needed
+                    if q["maxScore"] != 100:
+                        q["score"] = int((q["score"] / q["maxScore"]) * 100)
+                        q["maxScore"] = 100
+                        
+                    # Personalize feedback for each student
+                    q["feedback"] = f"Feedback for {name}'s answer to question {q['questionNumber']}."
+                    
+                    # Personalize strengths and improvements
+                    if len(q["strengths"]) > 0:
+                        q["strengths"] = [
+                            f"Strength point for {name}: {s}" for s in q["strengths"]
+                        ]
+                    
+                    if len(q["improvements"]) > 0:
+                        q["improvements"] = [
+                            f"Area for {name} to improve: {i}" for i in q["improvements"]
+                        ]
+                    
             students.append(student_data)
             
         return jsonify({"students": students})
