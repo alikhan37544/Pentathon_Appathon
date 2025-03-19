@@ -204,7 +204,7 @@ function setupTranscriptFunctionality() {
                   parseInt(timeParts[0]) * 3600 +
                   parseInt(timeParts[1]) * 60 +
                   parseInt(timeParts[2]);
-                const videoUrl = data.video_info.url + "&t=" + seconds;
+                const videoUrl = data.video_info.url + seconds;
                 window.open(videoUrl, "_blank");
               });
 
