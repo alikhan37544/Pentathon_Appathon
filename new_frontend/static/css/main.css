@@ -24,13 +24,68 @@ header h1 {
     font-size: 2.8rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    background: linear-gradient(90deg, #1a2e54, #3a5b94);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-shadow: 0 2px 10px rgba(26, 46, 84, 0.1);
+    color: #ffffff; /* Change to white color */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Enhanced shadow for better contrast */
     font-family: 'Playfair Display', serif;
     letter-spacing: 0.5px;
+    position: relative;
+    display: inline-block;
+    padding: 10px 25px;
+    background: linear-gradient(135deg, #1a2e54, #3a5b94);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: glow 3s ease-in-out infinite alternate, slideDown 1s ease-out forwards;
+    overflow: hidden;
+}
+
+/* Animation for the glowing effect */
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 10px rgba(58, 91, 148, 0.5);
+    }
+    100% {
+        box-shadow: 0 0 20px rgba(58, 91, 148, 0.8), 0 0 30px rgba(58, 91, 148, 0.4);
+    }
+}
+
+/* Animation for the slide-down effect */
+@keyframes slideDown {
+    0% {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Add a shimmer effect across the heading */
+header h1::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    animation: shimmer 6s infinite linear;
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: rotate(30deg) translateX(-100%);
+    }
+    100% {
+        transform: rotate(30deg) translateX(100%);
+    }
 }
 
 /* Tab navigation */
@@ -535,6 +590,157 @@ textarea.form-control {
 .segment-time {
     color: #1a2e54;
     font-weight: 500;
+}
+
+/* Video segment slider styles */
+.segment-slider {
+    position: relative;
+    margin: 30px 0;
+    overflow: hidden;
+}
+
+.segment-track {
+    display: flex;
+    gap: 15px;
+    transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    padding: 10px 5px;
+    will-change: transform;
+}
+
+.segment-card {
+    flex: 0 0 280px;
+    min-height: 180px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    animation: fadeIn 0.5s ease forwards;
+    transform-origin: center bottom;
+}
+
+.segment-card:hover {
+    transform: translateY(-7px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.segment-card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+.segment-card-title {
+    font-weight: 600;
+    color: #1a2e54;
+    font-size: 1.05rem;
+}
+
+.segment-card-time {
+    font-size: 0.85rem;
+    color: #3a5b94;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.segment-card-content {
+    color: #444;
+    margin-bottom: 12px;
+    line-height: 1.4;
+    font-size: 0.9rem;
+    max-height: 80px;
+    overflow: hidden;
+}
+
+.slider-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.slider-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(26, 46, 84, 0.1);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #1a2e54;
+}
+
+.slider-btn:hover {
+    background: rgba(26, 46, 84, 0.2);
+    transform: scale(1.1);
+}
+
+.slider-btn:active {
+    transform: scale(0.95);
+}
+
+.slider-btn.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Animation for segment cards */
+@keyframes cardPop {
+    0% {
+        transform: scale(0.8) translateY(20px);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.05) translateY(-5px);
+    }
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Apply animations with different delays */
+.segment-card:nth-child(1) { animation: cardPop 0.5s 0.1s forwards; }
+.segment-card:nth-child(2) { animation: cardPop 0.5s 0.2s forwards; }
+.segment-card:nth-child(3) { animation: cardPop 0.5s 0.3s forwards; }
+.segment-card:nth-child(4) { animation: cardPop 0.5s 0.4s forwards; }
+.segment-card:nth-child(5) { animation: cardPop 0.5s 0.5s forwards; }
+.segment-card:nth-child(n+6) { animation: cardPop 0.5s 0.6s forwards; }
+
+/* Hide cards initially before animation starts */
+.segment-card {
+    opacity: 0;
+}
+
+/* Progress indicator dots */
+.slider-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.slider-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(26, 46, 84, 0.2);
+    transition: all 0.3s ease;
+}
+
+.slider-dot.active {
+    background: #1a2e54;
+    transform: scale(1.3);
 }
 
 /* Responsive styles */
