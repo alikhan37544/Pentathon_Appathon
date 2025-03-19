@@ -1,0 +1,97 @@
+{
+  "id": "eval-1742418691",
+  "studentName": "Sample Student",
+  "subject": "Computer Science",
+  "year": "3rd Year",
+  "semester": "5th Semester",
+  "submissionDate": "2025-03-20T02:41:31.560200",
+  "overallScore": 85,
+  "maxScore": 100,
+  "questions": [
+    {
+      "id": 1,
+      "questionNumber": 1,
+      "questionText": "Sample Question 1",
+      "studentAnswer": "Sample student answer text...",
+      "score": 9,
+      "maxScore": 10,
+      "feedback": "Sample feedback for this answer...",
+      "strengths": [
+        "Strength point 1 for question 1",
+        "Strength point 2 for question 1"
+      ],
+      "improvements": [
+        "Improvement suggestion 1 for question 1",
+        "Improvement suggestion 2 for question 1"
+      ]
+    },
+    {
+      "id": 2,
+      "questionNumber": 2,
+      "questionText": "Sample Question 2",
+      "studentAnswer": "Sample student answer text...",
+      "score": 10,
+      "maxScore": 10,
+      "feedback": "Sample feedback for this answer...",
+      "strengths": [
+        "Strength point 1 for question 2",
+        "Strength point 2 for question 2"
+      ],
+      "improvements": [
+        "Improvement suggestion 1 for question 2",
+        "Improvement suggestion 2 for question 2"
+      ]
+    },
+    {
+      "id": 3,
+      "questionNumber": 3,
+      "questionText": "Sample Question 3",
+      "studentAnswer": "Sample student answer text...",
+      "score": 8,
+      "maxScore": 10,
+      "feedback": "Sample feedback for this answer...",
+      "strengths": [
+        "Strength point 1 for question 3",
+        "Strength point 2 for question 3"
+      ],
+      "improvements": [
+        "Improvement suggestion 1 for question 3",
+        "Improvement suggestion 2 for question 3"
+      ]
+    },
+    {
+      "id": 4,
+      "questionNumber": 4,
+      "questionText": "Sample Question 4",
+      "studentAnswer": "Sample student answer text...",
+      "score": 9,
+      "maxScore": 10,
+      "feedback": "Sample feedback for this answer...",
+      "strengths": [
+        "Strength point 1 for question 4",
+        "Strength point 2 for question 4"
+      ],
+      "improvements": [
+        "Improvement suggestion 1 for question 4",
+        "Improvement suggestion 2 for question 4"
+      ]
+    },
+    {
+      "id": 5,
+      "questionNumber": 5,
+      "questionText": "Sample Question 5",
+      "studentAnswer": "Sample student answer text...",
+      "score": 10,
+      "maxScore": 10,
+      "feedback": "Sample feedback for this answer...",
+      "strengths": [
+        "Strength point 1 for question 5",
+        "Strength point 2 for question 5"
+      ],
+      "improvements": [
+        "Improvement suggestion 1 for question 5",
+        "Improvement suggestion 2 for question 5"
+      ]
+    }
+  ]
+}

@@ -319,6 +319,61 @@ def check_results_exist():
     return jsonify({"exists": results_exist})
 
 
+@app.route('/api/students_results')
+def get_students_results():
+    """Get all students' evaluation results in JSON format"""
+    try:
+        # Check if the JSON results file exists
+        if not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
+            # If not, try to generate it from the HTML results
+            generate_json_results()
+            
+            # Check again - if still doesn't exist, return error
+            if not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
+                return jsonify({
+                    "status": "error", 
+                    "message": "Results not found"
+                }), 404
+        
+        # Read the JSON results file
+        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
+            results = json.load(f)
+        
+        # For this example, we'll simulate multiple students by creating variations
+        # In a real app, you'd have actual student data from your database
+        students = []
+        
+        # Use the existing result as a template for our first student
+        first_student = results.copy()
+        first_student["studentName"] = "Ali"  # From Ali.txt in student_answers folder
+        students.append(first_student)
+        
+        # Create a second student with slightly modified data
+        second_student = results.copy()
+        second_student["id"] = f"eval-{int(time.time())-100}"
+        second_student["studentName"] = "Shree"  # From Shree.txt in student_answers folder
+        second_student["overallScore"] = min(second_student["maxScore"], second_student["overallScore"] + 5)
+        
+        # Modify question scores for second student
+        for question in second_student["questions"]:
+            # Slightly vary scores, keeping within max score bounds
+            question["score"] = min(question["maxScore"], question["score"] + ([-1, 0, 1][question["id"] % 3]))
+            # Slightly different feedback
+            question["feedback"] = f"Slightly different feedback for {second_student['studentName']}'s answer."
+            
+        students.append(second_student)
+        
+        # Return all students data
+        return jsonify({"students": students})
+        
+    except Exception as e:
+        logger.error(f"Error retrieving student results: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error", 
+            "message": f"Error retrieving student results: {str(e)}"
+        }), 500
+
+
 # ----- Application entry point -----
 
 if __name__ == '__main__':

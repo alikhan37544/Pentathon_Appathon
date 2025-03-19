@@ -29,6 +29,23 @@ const viewResults = async () => {
   }
 };
 
+// Add a new method to get all student results
+const getStudentResults = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/students_results`);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to fetch student results');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API error in getStudentResults:', error);
+    throw error;
+  }
+};
+
 export const api = {
   // Start the evaluation process
   startEvaluation: async () => {
@@ -98,5 +115,8 @@ export const api = {
   },
 
   // View results
-  viewResults
+  viewResults,
+
+  // Get student results
+  getStudentResults
 };
