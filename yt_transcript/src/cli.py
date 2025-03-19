@@ -21,6 +21,7 @@ def process_video_command(args):
     
     # Get transcript
     transcript_data = fetch_transcript(video_id)
+    print(transcript_data)
     if not transcript_data:
         print(f"Failed to get transcript for video {video_id}")
         return
