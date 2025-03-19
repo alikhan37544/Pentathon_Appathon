@@ -3,9 +3,9 @@ function showAlert(message, type = "success") {
   const alertDiv = document.createElement("div");
   alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
   alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
 
   document.getElementById("alertContainer").appendChild(alertDiv);
 
@@ -28,6 +28,15 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".loading").forEach((el) => {
     el.style.display = "none";
   });
+
+  // Add close handler for document viewer
+  const closeViewer = document.getElementById("closeViewer");
+  if (closeViewer) {
+    closeViewer.addEventListener("click", function () {
+      document.getElementById("documentViewerContainer").style.display = "none";
+      document.getElementById("pdfViewer").src = "";
+    });
+  }
 });
 
 function setupDocumentFunctionality() {
@@ -108,13 +117,62 @@ function setupDocumentFunctionality() {
 
           if (data.success) {
             showAlert("Query executed successfully", "success");
-            resultsDiv.innerHTML =
-              '<h6>Results for: <span class="text-primary">' +
-              data.query +
-              "</span></h6><hr>";
 
-            // Format the results
-            resultsDiv.innerHTML += "<div>" + data.results + "</div>";
+            // Create a container for the results
+            let resultsHTML = `<h6>Results for: <span class="text-primary">${data.query}</span></h6><hr>`;
+
+            // Parse the response and extract content and sources
+            const responseText = data.results;
+
+            // For displaying the main response
+            resultsHTML += `<div class="response-content mb-4 p-3 bg-light rounded">${responseText}</div>`;
+
+            // If there are sources in the response, extract and display them as clickable links
+            const sourcesMatch = responseText.match(/Sources: \[(.*?)\]/);
+            if (sourcesMatch && sourcesMatch[1]) {
+              resultsHTML += `<h6 class="mt-3">Source Documents:</h6>`;
+              resultsHTML += `<div class="list-group">`;
+
+              // Parse the sources
+              const sources = sourcesMatch[1]
+                .split(",")
+                .map((s) => s.trim().replace(/'/g, ""));
+
+              sources.forEach((source) => {
+                // Extract document path and page information
+                const sourceMatch = source.match(/(.*?):([\d]+):([\d]+)/);
+                if (sourceMatch) {
+                  const [_, docPath, page, chunk] = sourceMatch;
+                  const fileName = docPath.split("/").pop();
+
+                  resultsHTML += `
+                      <a href="#" class="list-group-item list-group-item-action document-source" 
+                         data-source="${docPath}" data-page="${page}">
+                        <div class="d-flex w-100 justify-content-between">
+                          <h6 class="mb-1">${fileName}</h6>
+                          <small>Page ${page}</small>
+                        </div>
+                        <small class="text-muted">Click to view document</small>
+                      </a>`;
+                } else {
+                  resultsHTML += `<div class="list-group-item">${source}</div>`;
+                }
+              });
+
+              resultsHTML += `</div>`;
+            }
+
+            resultsDiv.innerHTML = resultsHTML;
+
+            // Add click handlers to document sources
+            document.querySelectorAll(".document-source").forEach((link) => {
+              link.addEventListener("click", function (e) {
+                e.preventDefault();
+                const source = this.dataset.source;
+                const page = parseInt(this.dataset.page) || 1;
+                openDocumentViewer(source, page);
+              });
+            });
           } else {
             showAlert("Error executing query", "danger");
             resultsDiv.innerHTML =
@@ -190,11 +248,11 @@ function setupTranscriptFunctionality() {
               segmentDiv.className = "list-group-item";
 
               segmentDiv.innerHTML = `
-                            <div class="segment-item">
-                                <div class="segment-text">${segment.title}</div>
-                                <div class="segment-time">${segment.start_time} - ${segment.end_time}</div>
-                            </div>
-                        `;
+                              <div class="segment-item">
+                                  <div class="segment-text">${segment.title}</div>
+                                  <div class="segment-time">${segment.start_time} - ${segment.end_time}</div>
+                              </div>
+                          `;
 
               // Add click handler to jump to that part of video on YouTube
               segmentDiv.addEventListener("click", function () {
@@ -275,25 +333,25 @@ function setupTranscriptFunctionality() {
                 );
 
                 resultDiv.innerHTML = `
-                                <div class="transcript-result-header">
-                                    <div class="transcript-result-title">${
-                                      result.metadata.title || "Unknown Video"
-                                    }</div>
-                                    <div class="transcript-result-timestamp">${timestamp}</div>
-                                </div>
-                                <div class="transcript-result-content">
-                                    ${result.content}
-                                </div>
-                                <div class="transcript-result-relevance">
-                                    <small>Relevance: ${(
-                                      1 - result.relevance
-                                    ).toFixed(2)}</small>
-                                </div>
-                                <a href="${result.metadata.url}" 
-                                   target="_blank" class="btn btn-sm btn-outline-danger mt-2">
-                                   <i class="bi bi-play-btn me-1"></i>Watch this segment
-                                </a>
-                            `;
+                                  <div class="transcript-result-header">
+                                      <div class="transcript-result-title">${
+                                        result.metadata.title || "Unknown Video"
+                                      }</div>
+                                      <div class="transcript-result-timestamp">${timestamp}</div>
+                                  </div>
+                                  <div class="transcript-result-content">
+                                      ${result.content}
+                                  </div>
+                                  <div class="transcript-result-relevance">
+                                      <small>Relevance: ${(
+                                        1 - result.relevance
+                                      ).toFixed(2)}</small>
+                                  </div>
+                                  <a href="${result.metadata.url}" 
+                                     target="_blank" class="btn btn-sm btn-outline-danger mt-2">
+                                     <i class="bi bi-play-btn me-1"></i>Watch this segment
+                                  </a>
+                              `;
 
                 resultsList.appendChild(resultDiv);
               });
@@ -335,4 +393,48 @@ function formatTime(seconds) {
     ":" +
     String(remainingSeconds).padStart(2, "0")
   );
+}
+
+function openDocumentViewer(docPath, page) {
+  // Make sure the path is properly defined
+  if (!docPath) {
+    console.error("Document path is undefined or empty");
+    showAlert("Cannot open document: path is missing", "danger");
+    return;
+  }
+
+  // Construct the URL to the PDF file with page parameter
+  const viewerUrl = `/view_document?path=${encodeURIComponent(docPath)}&page=${
+    page || 1
+  }`;
+
+  // Log that we're opening the document
+  console.log(`Opening document: ${docPath} at page ${page || 1}`);
+
+  // Open in a new tab
+  const newWindow = window.open(viewerUrl, "_blank");
+
+  // Check if the window was blocked by a popup blocker
+  if (
+    !newWindow ||
+    newWindow.closed ||
+    typeof newWindow.closed === "undefined"
+  ) {
+    showAlert(
+      "Popup blocker may have prevented opening the document. Please allow popups for this site.",
+      "warning"
+    );
+  }
+}
+
+function openSourceDocument(filepath, page = 1) {
+  // Create URL with the PDF.js viewer and the document path
+  const pdfViewerPath = "/static/pdfjs/web/viewer.html";
+  const documentPath = `/serve_document?path=${encodeURIComponent(filepath)}`;
+  const fullUrl = `${pdfViewerPath}?file=${encodeURIComponent(
+    documentPath
+  )}#page=${page}`;
+
+  // Open in a new window/tab
+  window.open(fullUrl, "_blank");
 }

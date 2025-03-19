@@ -116,3 +116,23 @@ body {
 
 .transcript-result-relevance {
     text-align:
+
+    .response-content {
+    white-space: pre-wrap;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.document-source {
+    transition: all 0.2s ease;
+}
+
+.document-source:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#documentViewerContainer {
+    transition: all 0.3s ease;
+}

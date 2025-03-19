@@ -5,7 +5,7 @@ import os
 import sys
 import json
 import subprocess
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, send_from_directory, send_file, abort
 from werkzeug.utils import secure_filename
 
 # Add the parent directory to the path for yt_transcript imports
@@ -181,6 +181,61 @@ def get_segments(video_id):
     return jsonify({
         'segments': segments
     })
+
+@app.route('/view_document')
+def view_document():
+    """View a document with optional page parameter."""
+    path = request.args.get('path', '')
+    page = request.args.get('page', 1, type=int)
+    
+    # Security check - make sure the path is within the data directory
+    if not path or '..' in path:
+        flash('Document not found')
+        return redirect(url_for('index'))
+    
+    # If the path doesn't include the full path, assume it's in the data folder
+    if not path.startswith('data/'):
+        path = os.path.join(UPLOAD_FOLDER, path)
+    
+    # Check if file exists
+    if not os.path.isfile(path):
+        flash('Document not found')
+        return redirect(url_for('index'))
+    
+    # For PDF files, use a PDF viewer
+    if path.lower().endswith('.pdf'):
+        # Create a PDF.js viewer URL
+        viewer_url = url_for('static', filename='pdfjs/web/viewer.html')
+        file_url = url_for('serve_document', path=path)
+        # Redirect to PDF.js viewer with the file URL and page number
+        return redirect(f"{viewer_url}?file={file_url}#{page}")
+    
+    # For other file types, just serve the file
+    return send_file(
+        path, 
+        download_name=os.path.basename(path),
+        as_attachment=False
+    )
+
+@app.route('/serve_document')
+def serve_document():
+    """Serve a document directly."""
+    path = request.args.get('path', '')
+    
+    # Security check - make sure the path is within the data directory
+    if not path or '..' in path:
+        return "Document not found", 404
+    
+    # If the path doesn't include the full path, assume it's in the data folder
+    if not path.startswith('data/'):
+        path = os.path.join(UPLOAD_FOLDER, path)
+    
+    # Check if file exists
+    if not os.path.isfile(path):
+        return "Document not found", 404
+        
+    # Return the file
+    return send_file(path)
 
 @app.route('/test', methods=['GET'])
 def test():
