@@ -18,8 +18,8 @@ function showAlert(message, type = "success") {
 
 // Document Ready Function
 document.addEventListener("DOMContentLoaded", function () {
-  // Add animations on page load
-  animateElements();
+  // Setup tab animations
+  setupTabAnimations();
   
   // Setup drag and drop file upload
   setupDragAndDrop();
@@ -45,31 +45,147 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
   
-  // Update hash when tabs are changed
-  const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
-  tabs.forEach(tab => {
-    tab.addEventListener('shown.bs.tab', function (e) {
-      if (e.target.id === 'transcript-tab') {
-        window.location.hash = 'video-transcripts';
-        // Re-trigger animations when tab changes
-        setTimeout(animateElements, 50);
+  // Add slider animation styles
+  addTabAnimationStyles();
+});
+
+// Function to add tab animation styles
+function addTabAnimationStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .tab-pane.sliding-out-left {
+      animation: slideOutLeft 0.5s forwards;
+      position: relative;
+    }
+    
+    .tab-pane.sliding-in-right {
+      animation: slideInRight 0.5s forwards;
+      position: relative;
+    }
+    
+    .tab-pane.sliding-out-right {
+      animation: slideOutRight 0.5s forwards;
+      position: relative;
+    }
+    
+    .tab-pane.sliding-in-left {
+      animation: slideInLeft 0.5s forwards;
+      position: relative;
+    }
+    
+    @keyframes slideOutLeft {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+    }
+    
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes slideOutRight {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+    }
+    
+    @keyframes slideInLeft {
+      from {
+        transform: translateX(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Setup tab animations
+function setupTabAnimations() {
+  const tabLinks = document.querySelectorAll('button[data-bs-toggle="tab"]');
+  let currentTab = 'document-tab';
+  
+  tabLinks.forEach(tabLink => {
+    tabLink.addEventListener('click', function(e) {
+      // Get the target tab pane
+      const targetPaneId = this.getAttribute('data-bs-target').substring(1);
+      const targetPane = document.getElementById(targetPaneId);
+      
+      // Get the current active tab pane
+      const activePane = document.querySelector('.tab-pane.active');
+      
+      // If the clicked tab is already active, do nothing
+      if (activePane.id === targetPaneId) return;
+      
+      // Prevent the default tab switching behavior
+      e.preventDefault();
+      
+      // Determine the direction of the transition
+      const direction = this.id === 'document-tab' ? 'left' : 'right';
+      
+      // Add animation classes based on direction
+      if (direction === 'left') {
+        activePane.classList.add('sliding-out-right');
+        targetPane.classList.add('sliding-in-left');
       } else {
-        window.location.hash = 'document-database';
-        // Re-trigger animations when tab changes
-        setTimeout(animateElements, 50);
+        activePane.classList.add('sliding-out-left');
+        targetPane.classList.add('sliding-in-right');
       }
       
-      // Hide results when switching tabs
-      document.getElementById('noResultsMessage').style.display = 'block';
-      document.getElementById('noVideoResultsMessage').style.display = 'block';
-      document.getElementById('queryDocumentsResults').style.display = 'none';
-      document.getElementById('populateOutput').style.display = 'none';
-      document.getElementById('videoInfo').style.display = 'none';
-      document.getElementById('videoSegments').style.display = 'none';
-      document.getElementById('transcriptResults').style.display = 'none';
+      // Show the target pane
+      targetPane.classList.add('active', 'show');
+      
+      // After animation completes, clean up classes
+      setTimeout(() => {
+        activePane.classList.remove('active', 'show', 'sliding-out-left', 'sliding-out-right');
+        targetPane.classList.remove('sliding-in-left', 'sliding-in-right');
+        
+        // Update the tab states
+        document.querySelector('.nav-link.active').setAttribute('aria-selected', 'false');
+        document.querySelector('.nav-link.active').classList.remove('active');
+        this.classList.add('active');
+        this.setAttribute('aria-selected', 'true');
+        
+        // Update hash
+        window.location.hash = this.id === 'transcript-tab' ? 'video-transcripts' : 'document-database';
+        
+        // Reset animation to prepare for elements
+        animateElements();
+        
+        // Hide results when switching tabs
+        document.getElementById('noResultsMessage').style.display = 'block';
+        document.getElementById('noVideoResultsMessage').style.display = 'block';
+        document.getElementById('queryDocumentsResults').style.display = 'none';
+        document.getElementById('populateOutput').style.display = 'none';
+        document.getElementById('videoInfo').style.display = 'none';
+        document.getElementById('videoSegments').style.display = 'none';
+        document.getElementById('transcriptResults').style.display = 'none';
+        
+        currentTab = this.id;
+      }, 500);
     });
   });
-});
+}
 
 // Function to re-run animations
 function animateElements() {
@@ -361,7 +477,7 @@ function setupDocumentFunctionality() {
           if (data.success) {
             showAlert("Query executed successfully", "success");
             resultsDiv.innerHTML =
-              '<h6 class="mb-3">Results for: <span class="fw-bold" style="color: #0a5f52;">' +
+              '<h6 class="mb-3">Results for: <span class="fw-bold" style="color: #1a2e54;">' +
               data.query +
               "</span></h6><hr>";
 
@@ -557,7 +673,7 @@ function setupTranscriptFunctionality() {
             if (data.results && data.results.length > 0) {
               resultsList.innerHTML = `
                 <div class="mb-3 pb-2 border-bottom slide-right">
-                  <h6 class="text-secondary">Found ${data.results.length} results for: <span class="fw-bold" style="color: #0a5f52;">${data.query}</span></h6>
+                  <h6 class="text-secondary">Found ${data.results.length} results for: <span class="fw-bold" style="color: #1a2e54;">${data.query}</span></h6>
                 </div>
               `;
               
@@ -649,21 +765,3 @@ function formatTime(seconds) {
     String(remainingSeconds).padStart(2, "0")
   );
 }
-
-// Add a keyframe animation for the slide out effect
-document.addEventListener('DOMContentLoaded', function() {
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes slideOutRight {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-});
