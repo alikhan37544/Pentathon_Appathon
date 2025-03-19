@@ -6,13 +6,14 @@ const API_URL = process.env.NODE_ENV === 'production'
 
 const viewResults = async () => {
   try {
-    // Use fetch directly with the correct URL and appropriate headers
-    const response = await fetch('/api/results', {
+    // Use correct endpoint matching your Flask route (/results)
+    const response = await fetch(`${API_URL}/results`, {
       method: 'GET',
       headers: {
-        'Accept': 'text/html,application/json',
-        'Content-Type': 'application/json',
+        'Accept': 'text/html',
       },
+      mode: 'cors',
+      credentials: 'omit'
     });
     
     if (!response.ok) {

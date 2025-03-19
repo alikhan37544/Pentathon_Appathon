@@ -4,7 +4,7 @@ import subprocess
 import threading
 import logging
 import socket
-from flask import Flask, render_template, jsonify, request, send_file
+from flask import Flask, render_template, jsonify, request, send_file, make_response
 from flask_cors import CORS
 
 # Configure logging
@@ -282,16 +282,20 @@ def view_results():
     """Display the evaluation results"""
     if not os.path.exists(APP_CONFIG["RESULTS_FILE"]):
         logger.warning("Results file not found when attempting to view results")
-        return render_template('error.html', message="No evaluation results found.")
+        return {"error": "No evaluation results found."}, 404
     
-    # Read the HTML content
+    # Just return the HTML content directly
     try:
         with open(APP_CONFIG["RESULTS_FILE"], "r", encoding="utf-8") as file:
             results_html = file.read()
-        return render_template('results.html', results_content=results_html)
+        
+        # Set content type to text/html explicitly
+        response = make_response(results_html)
+        response.headers["Content-Type"] = "text/html"
+        return response
     except Exception as e:
         logger.error(f"Error reading results file: {str(e)}", exc_info=True)
-        return render_template('error.html', message=f"Error reading results: {str(e)}")
+        return {"error": f"Error reading results: {str(e)}"}, 500
 
 
 @app.route('/download_results')

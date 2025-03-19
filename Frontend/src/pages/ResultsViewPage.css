@@ -55,6 +55,47 @@
   background-color: rgba(0, 0, 0, 0.02);
 }
 
+/* Additional styles for evaluation cards from auto_checker_v3.py */
+.results-content .evaluation-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  margin-bottom: 24px;
+  padding: 20px;
+  border-left: 5px solid #4285f4;
+}
+
+.results-content .student-info {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.results-content .student-name {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #4285f4;
+}
+
+.results-content .score {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.results-content .score-high {
+  color: #0f9d58;
+}
+
+.results-content .score-medium {
+  color: #f4b400;
+}
+
+.results-content .score-low {
+  color: #db4437;
+}
+
 .error-container {
   background-color: white;
   border-radius: 8px;

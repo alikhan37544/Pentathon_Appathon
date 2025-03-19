@@ -16,17 +16,25 @@ const ResultsViewPage = () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // First check if results exist
+        const resultsExistResponse = await api.checkResultsExist();
+        
+        if (!resultsExistResponse.exists) {
+          throw new Error('No evaluation results available yet. Please run an evaluation first.');
+        }
+        
         const html = await api.viewResults();
         
         if (!html || html.trim() === '') {
-          throw new Error('No results data received');
+          throw new Error('No results data received from server');
         }
         
         setResultsHtml(html);
         setLoading(false);
       } catch (err) {
         console.error('Failed to load results:', err);
-        setError(`Failed to load results: ${err.message || 'Unknown error'}`);
+        setError(`${err.message || 'Unknown error occurred while fetching results'}`);
         setLoading(false);
       }
     };
