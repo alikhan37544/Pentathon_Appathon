@@ -11,6 +11,7 @@ const Header = () => {
         </Link>
         <nav className="header-nav">
           <Link to="/upload" className="nav-link">Upload Answer Sheet</Link>
+          <Link to="/evaluation" className="nav-link">Evaluate Answers</Link>
         </nav>
       </div>
     </header>

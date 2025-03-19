@@ -1,0 +1,111 @@
+.evaluation-page {
+  padding: 2rem 0;
+}
+
+.evaluation-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.evaluation-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+.evaluation-header {
+  padding: 2rem;
+  text-align: center;
+}
+
+.evaluation-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.evaluation-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+}
+
+.evaluation-content {
+  padding: 2rem;
+}
+
+.loading-wrapper {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.processing-message {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.evaluation-info {
+  margin-bottom: 2rem;
+}
+
+.info-card {
+  display: flex;
+  background-color: var(--background-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.info-icon {
+  color: var(--primary-color);
+  flex-shrink: 0;
+}
+
+.info-text h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-blue);
+}
+
+.info-text p {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.evaluation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.results-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.error-message {
+  color: var(--error-color);
+  text-align: center;
+  padding: 1rem;
+  background-color: rgba(255, 0, 0, 0.05);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}
+
+.success-message {
+  color: var(--success-color);
+  text-align: center;
+  padding: 1rem;
+  background-color: rgba(0, 128, 0, 0.05);
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+}

@@ -1,0 +1,56 @@
+.results-view-page {
+  padding: 2rem 0;
+}
+
+.results-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.results-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.results-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+/* Styling the table from Flask */
+.results-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.results-content th {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  text-align: left;
+  padding: 0.75rem;
+  font-weight: 600;
+}
+
+.results-content td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.results-content tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}

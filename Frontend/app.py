@@ -3,7 +3,7 @@ import subprocess
 import threading
 import logging
 from flask import Flask, render_template, jsonify, request, send_file
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
 
 # Configure logging
 logging.basicConfig(
@@ -21,8 +21,17 @@ APP_CONFIG = {
 
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
-# Enable CORS for all routes
-CORS(app)
+
+# Configure CORS properly with explicit settings
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+# Also add CORS headers directly to responses for extra assurance
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Global variable to track evaluation status
 evaluation_status = {
