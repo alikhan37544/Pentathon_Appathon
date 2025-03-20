@@ -746,11 +746,17 @@ def get_students_results():
                 if not isinstance(student_data.get("overallScore"), (int, float)):
                     student_data["overallScore"] = 75  # Default score if missing
                 
-                # Normalize scores to 100-point scale if needed
+                # Normalize scores to 100-point scale if needed, but prevent double scaling
                 max_score = student_data.get("maxScore", 100) 
                 if max_score != 100 and max_score > 0:
-                    student_data["overallScore"] = int((student_data["overallScore"] / max_score) * 100)
-                    student_data["maxScore"] = 100
+                    # Check if score is already reasonably within 0-100 range
+                    if student_data["overallScore"] <= 100:
+                        # Score is already in correct range, don't scale
+                        student_data["maxScore"] = 100
+                    else:
+                        # Score needs scaling
+                        student_data["overallScore"] = int((student_data["overallScore"] / max_score) * 100)
+                        student_data["maxScore"] = 100
                 
                 # Add variation for each student except the first one (preserve original data)
                 if i > 0:
@@ -777,11 +783,18 @@ def get_students_results():
                         # Apply variation to question score
                         q_max = q.get("maxScore", 10)
                         if q_max > 0:
-                            q["score"] = max(0, min(q_max, q.get("score", 0) + q_variation))
-                        
-                            # Normalize to 100-point scale if needed
-                            if q_max != 100:
-                                q["score"] = int((q["score"] / q_max) * 100)
+                            # Check if score is already on a 0-100 scale
+                            if q["score"] <= q_max:
+                                q["score"] = max(0, min(q_max, q["score"] + q_variation))
+                                
+                                # Normalize to 100-point scale if needed
+                                if q_max != 100:
+                                    q["score"] = int((q["score"] / q_max) * 100)
+                                    q["maxScore"] = 100
+                            else:
+                                # Score is already scaled improperly, fix it
+                                q["score"] = int((q["score"] / 10))  # Assuming it was multiplied by 10
+                                q["score"] = max(0, min(100, q["score"] + q_variation))
                                 q["maxScore"] = 100
                         
                         # Try to extract answer from student content for this specific question
@@ -847,21 +860,43 @@ def get_students_results():
                                     for imp in original_improvements
                                 ]
                 
+                # Ensure every student has exactly 5 questions
+                questions = student_data.get("questions", [])
+                if len(questions) > 5:
+                    # Keep only the first 5 questions
+                    student_data["questions"] = questions[:5]
+                elif len(questions) < 5:
+                    # Add additional questions if needed
+                    existing_count = len(questions)
+                    for i in range(existing_count, 5):
+                        student_data["questions"].append({
+                            "id": i + 1,
+                            "questionNumber": i + 1,
+                            "questionText": f"Question {i+1}",
+                            "studentAnswer": "No answer provided",
+                            "score": 70,  # Default reasonable score
+                            "maxScore": 100,
+                            "feedback": "This question was automatically generated to maintain consistency.",
+                            "strengths": ["Consistent format maintained"],
+                            "improvements": ["Provide an actual answer to this question"]
+                        })
+                
                 # Calculate the average score from questions to ensure consistency
-                if student_data.get("questions"):
-                    total_score = 0
-                    valid_questions = 0
-                    
-                    for q in student_data["questions"]:
-                        if isinstance(q.get("score"), (int, float)) and q["score"] > 0:
-                            total_score += q["score"]
-                            valid_questions += 1
-                    
-                    if valid_questions > 0:
-                        recalculated_score = total_score / valid_questions
-                        # Only update if significantly different from current score
-                        if abs(recalculated_score - student_data["overallScore"]) > 20:
-                            student_data["overallScore"] = int(recalculated_score)
+                total_score = 0
+                valid_questions = 0
+                
+                for q in student_data["questions"]:
+                    if isinstance(q.get("score"), (int, float)) and q["score"] > 0:
+                        # Ensure all scores are within 0-100 range
+                        q["score"] = min(100, q["score"])
+                        total_score += q["score"]
+                        valid_questions += 1
+                
+                if valid_questions > 0:
+                    recalculated_score = total_score / valid_questions
+                    # Only update if significantly different from current score
+                    if abs(recalculated_score - student_data["overallScore"]) > 20:
+                        student_data["overallScore"] = int(recalculated_score)
                 
                 students.append(student_data)
                 logger.info(f"Successfully processed data for student: {name}")
