@@ -1,0 +1,252 @@
+{
+  "id": "eval-1742441082",
+  "studentName": "Ali",
+  "subject": "Unknown Subject",
+  "year": "Unknown Year",
+  "semester": "Unknown Semester",
+  "submissionDate": "2025-03-20T08:54:42.560875",
+  "overallScore": 75,
+  "maxScore": 100,
+  "questions": [
+    {
+      "id": 1,
+      "questionNumber": 1,
+      "questionText": "Question 1",
+      "studentAnswer": "Climate change is caused by pollution, deforestation, and industrial activities. It leads to global warming, melting ice caps, and severe weather patterns.",
+      "score": 75,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Correctly identified common causes and some effects of climate change.\n- Connected human activities to climate change effectively."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Omitted rising sea levels as an effect explicitly.  \n- Could refine the mention of pollution to specify types like emissions from vehicles or factories rather than general pollution.  \n\nThe student demonstrated a solid understanding but missed one specific aspect and could enhance clarity on another.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 2,
+      "questionNumber": 2,
+      "questionText": "Question 2",
+      "studentAnswer": "Einstein's theory of relativity includes special and general relativity. Special relativity deals with space and time, while general relativity explains gravity. These theories changed our understanding of the universe.",
+      "score": 75,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Recognizes Einstein's theories as including special and general relativity.  \n- Mentions gravity as spacetime curvature."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Needs to elaborate on each theory's specifics, such as time dilation and space-time interdependence in special relativity, and the implications of curved spacetime in general relativity.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 3,
+      "questionNumber": 3,
+      "questionText": "Question 3",
+      "studentAnswer": "Photosynthesis is how plants make food using sunlight, carbon dioxide, and water. It produces oxygen and is essential for life on Earth.",
+      "score": 95,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Accurate explanation of the process: The student correctly described how plants convert light energy into chemical energy to produce glucose.\n- Recognition of the importance of photosynthesis: The student highlighted its role in supporting life on Earth by producing oxygen and removing carbon dioxide.\n- Basic understanding of inputs and outputs: The student mentioned sunlight, CO2, and water as inputs and produced oxygen as an output."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Incorporation of additional details: While the student's answer was correct at an introductory level, mentioning processes like ATP or NADPH could provide a more comprehensive understanding.\n- Including scientific terms in detail: Using precise terminology might enhance clarity.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 4,
+      "questionNumber": 4,
+      "questionText": "Question 4",
+      "studentAnswer": "AI raises ethical concerns like privacy issues, job loss, and bias. It's important to ensure AI is used responsibly and ethically.",
+      "score": 85,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Covers major ethical concerns like privacy, job loss, and bias.\n- Emphasizes the importance of responsible AI use."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Could elaborate more on transparency in decision-making and moral frameworks regarding AI's moral status.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 5,
+      "questionNumber": 5,
+      "questionText": "Question 5",
+      "studentAnswer": "The Industrial Revolution changed society by moving production to factories, leading to urbanization and technological progress. However, it also caused social problems like poor working conditions and pollution.",
+      "score": 75,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Correctly mentions urbanization, factory economies, and social problems.\n- Partially addresses environmental pollution without depth."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Needs to include points like child labor and technological advancements more explicitly.\n- Should elaborate on how these changes affected the socioeconomic structure of society.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 6,
+      "questionNumber": 6,
+      "questionText": "Question 6",
+      "studentAnswer": "Some of the main causes of climate change is global warming and the change in wather conditions. that are present. The effect of global warming is melting ice caps and dying penguins.",
+      "score": 67,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Correctly noted that melting ice caps are an effect.\n- Attempted to identify climate impacts with \"dying penguins.\""
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Clarified the role of global warming as a consequence, not a cause.\n- Provided more specific factors contributing to climate change instead of vague terms like \"change in water conditions.\"\n- Accurately associated effects like melting ice caps without overcomplicating causes.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 7,
+      "questionNumber": 7,
+      "questionText": "Question 7",
+      "studentAnswer": "The theory of relativity is a theory that covers the relative position of relatives. it is relatively relative based on newton. The idea is that sometimes time moves different for 2 people in 2 different places i think probably.",
+      "score": 45,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Correctly identified time dilation as a part of special relativity."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Needed to elaborate on both special and general relativity.\n- Should include explanations about spacetime curvature and the concept of black holes.\n- Requires more precise terminology related to modern physics.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 8,
+      "questionNumber": 8,
+      "questionText": "Question 8",
+      "studentAnswer": "Photosynthesis is made up of 2 words - Photo and synthesis. 4 plants go on a picnic. They click a photo. Now they make a whatsapp group. Now they send the photo on that. This is synthesis of the photo, hence we made it work. pls give marks pls",
+      "score": 25,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- The student attempted to use an analogy for the word components of photosynthesis (Photo meaning light; synthesis meaning putting things together)."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Incorrect scientific details about how plants convert light energy into chemical energy, such as chlorophyll, carbon dioxide fixation, glucose production, oxygen release, and carbon sequestration.  \n- The importance of explaining the role of photosynthesis in supporting life on Earth (e.g., oxygen supply, air quality control).",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 9,
+      "questionNumber": 9,
+      "questionText": "Question 9",
+      "studentAnswer": "The ethical implications of ai are I don't know. I accept defeat",
+      "score": 30,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Attempted to acknowledge the question but provided no substance."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Thoroughly research and explain each ethical implication, such as privacy concerns, job displacement, decision-making transparency, bias, moral status, and responsibility.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 10,
+      "questionNumber": 10,
+      "questionText": "Question 10",
+      "studentAnswer": "The industrial revolution happened directly after the french revolution. It was basically where urbanization, factory products and change in labour practices. it made lots more products go big boom. Also, it resulted in class barriers and socio economic problems for everyone. Child labour, domicile, global warming happened and earth suffered while humans thrived. Mass market things became good and small market things were killed.",
+      "score": 65,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n**\n- Correct identification of urbanization, factory-based economies, and environmental issues.\n- Acknowledgment of mass production and its benefits.\n- Recognition of social challenges like child labor and pollution.\n\n**"
+      ],
+      "improvements": [
+        "Areas for Improvement:\n**\n- Correcting the timeline of the Industrial Revolution (circa 1760s in Britain).\n- Including specific examples of class structures' expansion or contraction.\n- Providing more detail on technological advancements, such as the steam engine's impact.\n- Clarifying terms like \"domestic\" to mean domestic workers and broader environmental impacts.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 11,
+      "questionNumber": 11,
+      "questionText": "Question 11",
+      "studentAnswer": "Climate change happens because of human activities like burning fossil fuels and cutting down trees. It causes global temperatures to rise and more extreme weather events.",
+      "score": 85,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Accurately addressed both the causes and effects of climate change.  \n- Connected human activities to specific outcomes like rising temperatures and extreme events."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Could expand on additional effects such as sea level rise, droughts, melting ice caps, etc.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 12,
+      "questionNumber": 12,
+      "questionText": "Question 12",
+      "studentAnswer": "Relativity theory by Einstein includes special relativity, which deals with the speed of light and time, and general relativity, which explains gravity. These theories have changed how we view the universe.",
+      "score": 85,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Correct identification and basic explanation of both special and general relativity.\n- Recognition of significant implications like black holes and spacetime curvature."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Expanding on the detailed implications such as time dilation and gravitational waves.\n- Providing more specific examples or explanations about how these theories have influenced modern physics.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 13,
+      "questionNumber": 13,
+      "questionText": "Question 13",
+      "studentAnswer": "Plants use photosynthesis to convert sunlight into energy, producing oxygen and removing carbon dioxide from the air. This process is vital for life on Earth.",
+      "score": 95,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Accurately describes the process of converting sunlight into energy in glucose.\n- Correctly states that plants produce oxygen and remove CO2 from the atmosphere."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Omitting the mention of algae and some bacteria may limit completeness.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 14,
+      "questionNumber": 14,
+      "questionText": "Question 14",
+      "studentAnswer": "AI has ethical issues such as privacy concerns, job displacement, and potential biases. It's crucial to develop and use AI in an ethical manner.",
+      "score": 75,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Addresses critical ethical issues like privacy, job displacement, and bias.\n- Emphasizes the importance of ethical use of AI."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- Needs to include additional points from the answer key, such as decision-making transparency and the moral status of AI.\n- Could provide more specific examples or elaboration on responsibility among developers and users.",
+        "Areas for Improvement:"
+      ]
+    },
+    {
+      "id": 15,
+      "questionNumber": 15,
+      "questionText": "Question 15",
+      "studentAnswer": "The Industrial Revolution led to the growth of cities and technological advancements but also resulted in poor working conditions and environmental damage.",
+      "score": 65,
+      "maxScore": 100,
+      "feedback": "",
+      "strengths": [
+        "Strengths:\n- Accurately recognized technological advancements and city growth."
+      ],
+      "improvements": [
+        "Areas for Improvement:\n- The response is too brief; it needs to elaborate on specific social challenges like poor working conditions, child labor, and environmental impact.\n- It should address the broader socioeconomic structure changes, such as urbanization effects and labor dynamics.",
+        "Areas for Improvement:"
+      ]
+    }
+  ]
+}

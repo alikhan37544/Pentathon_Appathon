@@ -156,13 +156,18 @@ const HomePage = () => {
       <section className="cta-section gradient-bg">
         <div className="container">
           <div className="cta-content">
-            <h2 className="cta-title">Ready to Improve Your Academic Performance?</h2>
-            <p className="cta-description">
-              Upload your answer sheet now and get detailed AI-powered feedback to enhance your learning experience.
+            <h2 className="section-title">Ready to Get Started?</h2>
+            <p className="cta-text">
+              Upload your answer sheet and get instant, AI-powered evaluation and feedback.
             </p>
-            <Link to="/upload" className="cta-btn btn btn-primary btn-lg">
-              Start Evaluation
-            </Link>
+            <div className="cta-buttons">
+              <Link to="/upload" className="cta-btn btn btn-primary btn-lg">
+                Upload Answer Sheet
+              </Link>
+              <Link to="/evaluation" className="cta-btn btn btn-secondary btn-lg">
+                Evaluate Answer Sheets
+              </Link>
+            </div>
           </div>
         </div>
       </section>
