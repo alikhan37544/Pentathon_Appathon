@@ -650,20 +650,22 @@ function formatTime(seconds) {
   );
 }
 
-// Add a keyframe animation for the slide out effect
+
+
+  // Add this to your main.js file
 document.addEventListener('DOMContentLoaded', function() {
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes slideOutRight {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(100%);
-        opacity: 0;
-      }
+    // Get the background video element
+    const bgVideo = document.querySelector('.video-background video');
+    
+    // Check if video exists
+    if (bgVideo) {
+        // Set playback rate to 0.5 (half speed)
+        // You can adjust this value: 0.25 (quarter speed), 0.75 (three-quarter speed), etc.
+        bgVideo.playbackRate = 0.5;
+        
+        // Make sure video is playing
+        bgVideo.play().catch(error => {
+            console.log('Video autoplay was prevented:', error);
+        });
     }
-  `;
-  document.head.appendChild(style);
 });

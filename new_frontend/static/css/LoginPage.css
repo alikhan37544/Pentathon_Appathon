@@ -1,0 +1,149 @@
+/* Login page specific styles */
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 450px;
+    background: rgba(210, 230, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(162, 196, 255, 0.3);
+    animation: fadeIn 0.8s ease-out;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h1 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1c3863;
+    margin-bottom: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.login-tabs {
+    margin-bottom: 25px;
+}
+
+.login-tabs .nav {
+    justify-content: center;
+    gap: 20px;
+}
+
+.login-tabs .nav-link {
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 500;
+    color: #1c3863;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(28, 56, 99, 0.2);
+}
+
+.login-tabs .nav-link:hover {
+    background: rgba(28, 56, 99, 0.1);
+}
+
+.login-tabs .nav-link.active {
+    background: linear-gradient(to right, #1c3863, #285a9a);
+    color: white;
+    box-shadow: 0 4px 10px rgba(28, 56, 99, 0.3);
+    border: 1px solid transparent;
+}
+
+.form-floating > .form-control {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(28, 56, 99, 0.2);
+}
+
+.form-floating > .form-control:focus {
+    border-color: #1c3863;
+    box-shadow: 0 0 0 3px rgba(28, 56, 99, 0.2);
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.form-floating > label {
+    color: #1c3863;
+}
+
+.form-check-label {
+    color: #1c3863;
+    font-size: 0.9rem;
+}
+
+.btn-login {
+    padding: 12px;
+    font-weight: 600;
+    background: linear-gradient(to right, #1c3863, #285a9a);
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover {
+    box-shadow: 0 5px 15px rgba(40, 90, 154, 0.4);
+    transform: translateY(-2px);
+    background: linear-gradient(to right, #285a9a, #3670b9);
+}
+
+.login-footer {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.forgot-password-link {
+    color: #1c3863;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.forgot-password-link:hover {
+    color: #285a9a;
+    text-decoration: underline;
+}
+
+.login-info {
+    color: #1c3863;
+    font-size: 0.9rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .login-box {
+        padding: 20px;
+        margin: 0 15px;
+    }
+    
+    .login-header h1 {
+        font-size: 1.7rem;
+    }
+    
+    .login-tabs .nav-link {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+}
