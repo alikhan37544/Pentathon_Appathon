@@ -366,11 +366,28 @@ class OllamaVisionAPI:
     
     def call_api(self, base64_image: str, task_type: str = "ocr", temperature: float = 0.1) -> str:
         """
-        Calls the Ollama API using langchain-ollama with the provided image and returns the extracted text.
+        Calls the Ollama API with the provided image and returns the extracted text.
+        Handles streaming JSON responses correctly.
         """
         prompt = self.generate_prompt(task_type)
         
         try:
+<<<<<<< HEAD
+            # Call the Ollama API
+            response = requests.post(
+                self.api_url,
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "images": [base64_image],
+                    "temperature": temperature,
+                    "max_tokens": MAX_TOKENS,
+                    "stream": False  # Explicitly disable streaming to get a single response
+                }
+            )
+            
+            if response.status_code != 200:
+=======
             # Use direct API call with proper streaming support
             url = self.api_url.replace("/generate", "/chat") # Use chat endpoint instead
             payload = {
@@ -393,12 +410,35 @@ class OllamaVisionAPI:
                 # The response format is different in the chat endpoint
                 return result.get("message", {}).get("content", "").strip()
             else:
+>>>>>>> a7559b69ec0130473c0d51fa8adb520d2d03f278
                 print(f"Error from Ollama API: {response.status_code}, {response.text}")
                 return ""
+            
+            # Parse the JSON response correctly
+            try:
+                result = response.json()
+                return result.get("response", "").strip()
+            except json.JSONDecodeError as e:
+                # If we still get a JSON error, try to handle streaming response
+                content = response.text
+                # Get the first valid JSON object in the response
+                try:
+                    first_json_end = content.find("}\n")
+                    if first_json_end > 0:
+                        first_chunk = content[:first_json_end + 1]
+                        result = json.loads(first_chunk)
+                        return result.get("response", "").strip()
+                    else:
+                        print(f"Could not parse response: {e}")
+                        return content.strip()  # Return raw content as fallback
+                except Exception as parse_error:
+                    print(f"Error parsing streaming response: {parse_error}")
+                    return content.strip()  # Return raw content as fallback
+                
         except Exception as e:
             print(f"Error calling Ollama API: {e}")
             return ""
-        
+            
 class TextPostProcessor:
     """Handles all post-processing of extracted text to improve accuracy."""
     

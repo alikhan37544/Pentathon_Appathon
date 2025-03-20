@@ -3,91 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OCR Hackathon - Text Extraction Platform</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>OCR Hackathon - Home</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        nav {
+            background-color: #333;
+            color: white;
+            padding: 1rem 0;
+        }
+        
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        nav ul li {
+            margin: 0 15px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+        }
+        
+        nav ul li a:hover {
+            background-color: #555;
+        }
+        
+        nav ul li a.active {
+            background-color: #4CAF50;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+        }
+        
+        h1 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        
+        .feature-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            width: calc(50% - 1rem);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .feature-card h2 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .btn:hover {
+            background-color: #45a049;
+        }
+        
+        @media (max-width: 768px) {
+            .feature-card {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="app-title">OCR Platform</div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="/" class="active">
-                    <div class="icon">⌂</div>
-                    <span>Home</span>
-                </a>
-            </li>
-            <li>
-                <a href="/fancyocr">
-                    <div class="icon">📷</div>
-                    <span>Fancy OCR</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ollama">
-                    <div class="icon">💬</div>
-                    <span>Ollama Chat</span>
-                </a>
-            </li>
+    <nav>
+        <ul>
+            <li><a href="/" class="active">Home</a></li>
+            <li><a href="/ollama">Ollama</a></li>
+            <li><a href="/fancyocr">Fancy OCR</a></li>
         </ul>
-    </div>
+    </nav>
     
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="top-bar">
-            <a href="/fancyocr" class="btn btn-primary">Upload Image</a>
-            <a href="/ollama" class="btn btn-secondary" style="margin-left: 10px;">Chat with Ollama</a>
+    <div class="container">
+        <div class="hero">
+            <h1>OCR Hackathon Project</h1>
+            <p>An advanced text extraction platform using AI vision models</p>
         </div>
         
-        <div class="page-header">
-            <h1 class="page-title">OCR Hackathon Project</h1>
-            <p class="page-subtitle">An advanced text extraction platform using AI vision models</p>
-        </div>
-        
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-            <div class="stat-card">
-                <div class="stat-icon">📷</div>
-                <div class="stat-value">Llama 3.2</div>
-                <div class="stat-label">Vision Model</div>
+        <div class="features">
+            <div class="feature-card">
+                <h2>Fancy OCR</h2>
+                <p>Extract text from images with advanced AI vision capabilities powered by Llama 3.2 Vision model. 
+                   Handles complex layouts, multiple columns, and tables with high accuracy.</p>
+                <a href="/fancyocr" class="btn">Try Fancy OCR</a>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">💡</div>
-                <div class="stat-value">High</div>
-                <div class="stat-label">Accuracy Rate</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-value">Fast</div>
-                <div class="stat-label">Processing Speed</div>
-            </div>
-        </div>
-        
-        <!-- Features Description -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Platform Features</h2>
-            </div>
-            <div class="card-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                    <div>
-                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--primary);">Fancy OCR</h3>
-                        <p>Extract text from images with advanced AI vision capabilities powered by Llama 3.2 Vision model. 
-                           Handles complex layouts, multiple columns, and tables with high accuracy.</p>
-                        <a href="/fancyocr" class="btn" style="margin-top: 1rem;">Try Fancy OCR</a>
-                    </div>
-                    
-                    <div>
-                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--secondary);">Ollama Chat</h3>
-                        <p>Interact with Ollama's powerful language models. Ask questions, generate content, 
-                           or get assistance with your text-based tasks.</p>
-                        <a href="/ollama" class="btn btn-secondary" style="margin-top: 1rem;">Chat with Ollama</a>
-                    </div>
-                </div>
+            
+            <div class="feature-card">
+                <h2>Ollama Chat</h2>
+                <p>Interact with Ollama's powerful language models. Ask questions, generate content, 
+                   or get assistance with your text-based tasks.</p>
+                <a href="/ollama" class="btn">Chat with Ollama</a>
             </div>
         </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

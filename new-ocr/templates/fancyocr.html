@@ -5,88 +5,495 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fancy OCR - Extract Text from Images</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #7209b7;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        nav {
+            background-color: var(--primary-color);
+            box-shadow: var(--box-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            justify-content: center;
+        }
+        
+        nav ul li {
+            margin: 0;
+            padding: 0;
+        }
+        
+        nav ul li a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        nav ul li a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        nav ul li a.active {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .form-container {
+            margin-bottom: 2rem;
+            background-color: var(--light-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            border: 1px dashed #ccc;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        .file-input-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            border: 2px dashed #ccc;
+            border-radius: var(--border-radius);
+            background-color: white;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .file-input-container:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .file-input-container .icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .file-input-container .text {
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .file-input-container #imageFile {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-name {
+            margin-top: 1rem;
+            font-weight: 500;
+            color: var(--primary-color);
+            display: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(67, 97, 238, 0.3);
+            transition: var(--transition);
+            width: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.5s;
+        }
+        
+        .btn:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .loader {
+            border: 3px solid rgba(67, 97, 238, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary-color);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .loader-text {
+            font-weight: 500;
+            color: var(--primary-color);
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #resultContainer {
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            transform-origin: top;
+        }
+        
+        #resultContainer.hidden {
+            display: none;
+        }
+        
+        .result-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .result-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+        
+        .result-header .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        #result {
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            border: 1px solid #eee;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        
+        #result::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #result::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #result::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        
+        #result::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .form-container {
+                padding: 1.5rem;
+            }
+            
+            .file-input-container {
+                padding: 1.5rem;
+            }
+            
+            .btn {
+                padding: 0.7rem 1.5rem;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+    </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="app-title">OCR Platform</div>
-        <ul class="sidebar-menu">
-            <li>
-                <a href="/">
-                    <div class="icon">⌂</div>
-                    <span>Home</span>
-                </a>
-            </li>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/ollama">Ollama</a></li>
+            <li><a href="/fancyocr" class="active">Fancy OCR</a></li>
         </ul>
+    </nav>
+    
+    <div class="container animate-fade-in">
+        <div class="header">
+            <h1>Fancy OCR</h1>
+            <p>Extract text from images using advanced AI vision technology</p>
+        </div>
+        
+        <div class="form-container">
+            <form id="ocrForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="imageFile">Upload Image</label>
+                    <div class="file-input-container">
+                        <i class="fas fa-cloud-upload-alt icon"></i>
+                        <div class="text">Drag and drop your image here or click to browse</div>
+                        <input type="file" id="imageFile" name="file" accept="image/*" required>
+                        <div id="fileName" class="file-name"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn">
+                    <i class="fas fa-magic"></i> Extract Text
+                </button>
+            </form>
+        </div>
+        
+        <div class="loader-container">
+            <div id="loader" class="loader"></div>
+            <div id="loaderText" class="loader-text">Processing your image...</div>
+        </div>
+        
+        <div id="resultContainer" class="hidden">
+            <div class="result-header">
+                <h2><i class="fas fa-file-alt"></i> Extracted Text</h2>
+                <div class="actions">
+                    <button id="copyBtn" class="action-btn" title="Copy to clipboard">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="result"></div>
+        </div>
+        
+        <div class="footer">
+            <p>Powered by Ollama llama3.2-vision model</p>
+        </div>
     </div>
     
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // File input handling
+        const fileInput = document.getElementById('imageFile');
+        const fileName = document.getElementById('fileName');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                fileName.textContent = this.files[0].name;
+                fileName.style.display = 'block';
+            } else {
+                fileName.style.display = 'none';
+            }
+        });
+        
+        // Form submission
+        document.getElementById('ocrForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const loader = document.getElementById('loader');
+            const loaderText = document.getElementById('loaderText');
+            const resultContainer = document.getElementById('resultContainer');
+            const resultDiv = document.getElementById('result');
+            
+            // Show loader, hide results
+            loader.style.display = 'block';
+            loaderText.style.display = 'block';
+            resultContainer.classList.add('hidden');
+            
+            fetch('/fancyocr', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loader
+                loader.style.display = 'none';
+                loaderText.style.display = 'none';
+                
+                if (data.error) {
+                    resultDiv.textContent = 'Error: ' + data.error;
+                } else {
+                    resultDiv.textContent = data.text;
+                }
+                
+                // Show results
+                resultContainer.classList.remove('hidden');
+                resultContainer.scrollIntoView({ behavior: 'smooth' });
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                loaderText.style.display = 'none';
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultContainer.classList.remove('hidden');
+            });
+        });
+        
+        // Copy to clipboard functionality
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const resultText = document.getElementById('result').textContent;
+            
+            navigator.clipboard.writeText(resultText).then(function() {
+                // Show a temporary tooltip or notification
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i>';
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                }, 2000);
+            }.bind(this)).catch(function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        });
+    </script>
 </body>
 </html>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="top-bar">
-            <a href="/" class="btn btn-outline">Back to Home</a>
-        </div>
-        
-        <div class="page-header">
-            <h1 class="page-title">Fancy OCR</h1>
-            <p class="page-subtitle">Upload an image and extract text using our advanced AI vision model</p>
-        </div>
-        
-        <!-- OCR Upload Card -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">Text Extraction</h2>
-            </div>
-            <div class="card-body">
-                <div class="drop-area" id="dropArea">
-                    <div class="icon">📄</div>
-                    <p>Drop your file(s) here, or <span class="browse-link" id="browseLink">browse</span></p>
-                    <p class="file-info">Supports: png, jpg, jpeg, gif, bmp, webp (max size 90MB)</p>
-                    <input type="file" id="fileInput" class="hidden" accept="image/*">
-                </div>
-                
-                <div class="files-list" id="filesList"></div>
-                
-                <button type="button" class="btn" id="processButton">Extract Text</button>
-                
-                <div id="loader" class="loader"></div>
-                
-                <div id="resultContainer" class="result-container hidden">
-                    <h3 class="result-heading">Extracted Text:</h3>
-                    <div id="result" class="result-box"></div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- About OCR Technology -->
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">About OCR Technology</h2>
-            </div>
-            <div class="card-body">
-                <p>Our Fancy OCR system uses the Llama 3.2 Vision model to accurately extract text from images. The system can handle:</p>
-                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                    <li>Complex layouts with multiple columns</li>
-                    <li>Tables and structured data</li>
-                    <li>Handwritten text (with moderate accuracy)</li>
-                    <li>Various image formats and quality levels</li>
-                </ul>
-                <p style="margin-top: 1rem;">The extracted text preserves formatting as much as possible, making it ideal for digitizing documents.</p>
-            </div>
-        </div>
-    </div>
-            <li>
-                <a href="/fancyocr" class="active">
-                    <div class="icon">📷</div>
-                    <span>Fancy OCR</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ollama">
-                    <div class="icon">💬</div>
-                    <span>Ollama Chat</span>
-                </a>
-            </li>

@@ -12,6 +12,8 @@ app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
 
 def allowed_file(filename):
@@ -33,14 +35,17 @@ def fancyocr():
             return jsonify({'error': 'No selected file'})
         
         if file and allowed_file(file.filename):
-            # Save uploaded file
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            
-            # Get OCR result
-            ocr_text = get_ocr_from_ollama(filepath)
-            return jsonify({'text': ocr_text})
+            try:
+                # Save uploaded file
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                
+                # Get OCR result
+                ocr_text = get_ocr_from_ollama(filepath)
+                return jsonify({'text': ocr_text})
+            except Exception as e:
+                return jsonify({'error': f'Upload failed: {str(e)}'})
         else:
             return jsonify({'error': 'File type not allowed'})
     
@@ -88,4 +93,4 @@ def ollama():
     return render_template('ollama.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0')
