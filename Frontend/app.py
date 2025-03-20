@@ -4,6 +4,8 @@ import subprocess
 import threading
 import logging
 import socket
+import time
+from datetime import datetime  # Add this import at the top level
 from flask import Flask, render_template, jsonify, request, send_file, make_response
 from flask_cors import CORS
 import copy
@@ -132,88 +134,279 @@ def generate_json_results():
         # Check if HTML results file exists
         if not os.path.exists(APP_CONFIG["RESULTS_FILE"]):
             logger.warning("HTML results file not found, cannot generate JSON")
-            return
+            return None
             
         # Read the HTML file
         with open(APP_CONFIG["RESULTS_FILE"], 'r', encoding='utf-8') as f:
             html_content = f.read()
             
         # Use BeautifulSoup to parse HTML
-        from bs4 import BeautifulSoup
         soup = BeautifulSoup(html_content, 'html.parser')
         
-        # Extract metadata
+        # Extract metadata with better error handling
         student_info = soup.select_one('.student-info')
-        student_name = student_info.select_one('.student-name').text.strip() if student_info else "Unknown Student"
-        subject = student_info.select_one('.subject').text.strip() if student_info else "Unknown Subject"
-        year = student_info.select_one('.year').text.strip() if student_info else "Unknown Year"
-        semester = student_info.select_one('.semester').text.strip() if student_info else "Unknown Semester"
+        student_name = "Unknown Student"
+        subject = "Unknown Subject"
+        year = "Unknown Year"
+        semester = "Unknown Semester"
         
-        # Extract overall score - ensure it's out of 100
+        if student_info:
+            name_elem = student_info.select_one('.student-name')
+            subject_elem = student_info.select_one('.subject')
+            year_elem = student_info.select_one('.year')
+            semester_elem = student_info.select_one('.semester')
+            
+            student_name = name_elem.text.strip() if name_elem else student_name
+            subject = subject_elem.text.strip() if subject_elem else subject
+            year = year_elem.text.strip() if year_elem else year
+            semester = semester_elem.text.strip() if semester_elem else semester
+        else:
+            # Try alternative methods to find student info
+            title_elem = soup.select_one('h1') or soup.select_one('title')
+            if title_elem and ":" in title_elem.text:
+                student_name = title_elem.text.split(":")[1].strip()
+            
+        # Extract overall score with better error handling
         score_element = soup.select_one('.overall-score')
         overall_score = 0
         max_score = 100
-        if score_element:
-            # Parse score text (assuming format like "85/100")
-            score_text = score_element.text.strip()
-            score_parts = score_text.split('/')
-            if len(score_parts) == 2:
-                overall_score = int(score_parts[0])
-                max_score = int(score_parts[1])
-            else:
-                # If just a number, assume it's out of 100
-                overall_score = int(score_text)
         
-        # Find all question sections
+        if score_element:
+            try:
+                score_text = score_element.text.strip()
+                if '/' in score_text:
+                    score_parts = score_text.split('/')
+                    overall_score = int(float(score_parts[0]))
+                    max_score = int(float(score_parts[1]))
+                else:
+                    overall_score = int(float(score_text))
+            except (ValueError, IndexError) as e:
+                logger.warning(f"Error parsing score: {str(e)}")
+        else:
+            # Try alternative score elements
+            alt_score = soup.select_one('.score') or soup.select_one('.total-score')
+            if alt_score:
+                try:
+                    score_text = alt_score.text.strip()
+                    if '/' in score_text:
+                        score_parts = score_text.split('/')
+                        overall_score = int(float(score_parts[0]))
+                        max_score = int(float(score_parts[1]))
+                    else:
+                        overall_score = int(float(score_text))
+                except (ValueError, IndexError):
+                    pass
+        
+        # Find all question sections - try multiple selectors
         questions = []
-        question_sections = soup.select('.question-section')
+        question_sections = (
+            soup.select('.question-section') or 
+            soup.select('.evaluation-card') or 
+            soup.select('.question') or
+            soup.select('.answer-section') or
+            soup.select('section') or
+            soup.select('div[id^="question"]')
+        )
+            
+        logger.info(f"Found {len(question_sections)} question sections")
+        
+        # If we still don't have question sections, try a more generic approach
+        if not question_sections:
+            # Look for divs that might contain questions (with h2, h3 headers)
+            potential_sections = soup.select('div > h2, div > h3')
+            parent_sections = set()
+            for header in potential_sections:
+                parent = header.parent
+                if parent:
+                    parent_sections.add(parent)
+            question_sections = list(parent_sections)
+            logger.info(f"Using alternate method, found {len(question_sections)} potential question sections")
         
         for i, section in enumerate(question_sections):
-            question_text_elem = section.select_one('.question-text')
-            question_text = question_text_elem.text.strip() if question_text_elem else f"Question {i+1}"
-            
-            answer_elem = section.select_one('.student-answer')
-            student_answer = answer_elem.text.strip() if answer_elem else ""
-            
-            # Extract score for this question
-            question_score_elem = section.select_one('.question-score')
-            q_score = 0
-            q_max_score = 10  # Default
-            
-            if question_score_elem:
-                score_text = question_score_elem.text.strip()
-                score_parts = score_text.split('/')
-                if len(score_parts) == 2:
-                    q_score = int(score_parts[0])
-                    q_max_score = int(score_parts[1])
+            try:
+                # Try multiple possible selectors for question text
+                question_text_elem = (
+                    section.select_one('.question-text') or 
+                    section.select_one('h2') or
+                    section.select_one('h3') or 
+                    section.select_one('h4') or
+                    section.select_one('strong') or
+                    section.select_one('b')
+                )
+                question_text = question_text_elem.text.strip() if question_text_elem else f"Question {i+1}"
+                
+                # Try to extract question number if available
+                question_number = i + 1
+                if question_text:
+                    # Try several patterns to extract question number
+                    import re
+                    patterns = [
+                        r'Question\s*(\d+)',
+                        r'Q(\d+)',
+                        r'#(\d+)',
+                        r'^(\d+)[.:]'
+                    ]
+                    for pattern in patterns:
+                        match = re.search(pattern, question_text, re.IGNORECASE)
+                        if match:
+                            try:
+                                question_number = int(match.group(1))
+                                break
+                            except:
+                                pass
+                
+                # Look for student answer in multiple possible elements
+                answer_elem = (
+                    section.select_one('.student-answer') or 
+                    section.select_one('.answer') or
+                    section.select_one('.response') or
+                    section.select_one('p') or
+                    section.select_one('div > p')
+                )
+                student_answer = ""
+                if answer_elem:
+                    student_answer = answer_elem.text.strip()
                 else:
-                    # If just a number, use it as is
-                    q_score = int(score_text)
-            
-            # Scale scores to be out of 100 if they're out of 10
-            if q_max_score == 10 and max_score == 100:
-                q_score = q_score * 10
-                q_max_score = 100
-            
-            feedback_elem = section.select_one('.feedback')
-            feedback = feedback_elem.text.strip() if feedback_elem else ""
-            
-            # Get strengths and improvements
-            strengths = [li.text.strip() for li in section.select('.strengths li')] if section.select_one('.strengths') else []
-            improvements = [li.text.strip() for li in section.select('.improvements li')] if section.select_one('.improvements') else []
-            
-            question_data = {
-                "id": i + 1,
-                "questionNumber": i + 1,
-                "questionText": question_text,
-                "studentAnswer": student_answer,
-                "score": q_score,
-                "maxScore": q_max_score,
-                "feedback": feedback,
-                "strengths": strengths,
-                "improvements": improvements
-            }
-            questions.append(question_data)
+                    # Try to get all text that's not in other elements
+                    texts = [text for text in section.stripped_strings]
+                    if len(texts) > 1:  # Skip first as it's likely the question
+                        student_answer = ' '.join(texts[1:])
+                
+                # Extract score with better error handling
+                question_score_elem = (
+                    section.select_one('.question-score') or
+                    section.select_one('.score') or
+                    section.select_one('span[class*="score"]')
+                )
+                q_score = 0
+                q_max_score = 10  # Default
+                
+                if question_score_elem:
+                    try:
+                        score_text = question_score_elem.text.strip()
+                        if '/' in score_text:
+                            score_parts = score_text.split('/')
+                            q_score = int(float(score_parts[0]))
+                            q_max_score = int(float(score_parts[1]))
+                        else:
+                            q_score = int(float(score_text))
+                    except (ValueError, IndexError) as e:
+                        logger.warning(f"Error parsing question score: {str(e)}")
+                
+                # Try to normalize scores consistently
+                if max_score == 100 and q_max_score != 100:
+                    # Convert to percentage
+                    q_score = int((q_score / q_max_score) * 100)
+                    q_max_score = 100
+                
+                # Look for feedback in multiple possible elements
+                feedback_elem = (
+                    section.select_one('.feedback') or
+                    section.select_one('.comment') or
+                    section.select_one('.evaluation')
+                )
+                feedback = feedback_elem.text.strip() if feedback_elem else ""
+                
+                # Get strengths and improvements with better selectors
+                strengths = []
+                strengths_section = (
+                    section.select_one('.strengths') or
+                    section.select_one('.positive') or
+                    section.select_one('.pros')
+                )
+                
+                if strengths_section:
+                    # Try to get list items first
+                    strength_items = strengths_section.select('li')
+                    if strength_items:
+                        strengths = [li.text.strip() for li in strength_items if li.text.strip()]
+                    else:
+                        # If no list items, use the text content directly
+                        text = strengths_section.text.strip()
+                        if text:
+                            # Try to split by common separators
+                            for sep in ['\n', '.', ';']:
+                                if sep in text:
+                                    strengths = [part.strip() for part in text.split(sep) if part.strip()]
+                                    break
+                            if not strengths:  # If no splitting worked, use the whole text
+                                strengths = [text]
+                
+                improvements = []
+                improvements_section = (
+                    section.select_one('.improvements') or
+                    section.select_one('.negative') or
+                    section.select_one('.cons') or
+                    section.select_one('.areas-for-improvement')
+                )
+                
+                if improvements_section:
+                    # Try to get list items first
+                    improvement_items = improvements_section.select('li')
+                    if improvement_items:
+                        improvements = [li.text.strip() for li in improvement_items if li.text.strip()]
+                    else:
+                        # If no list items, use the text content directly
+                        text = improvements_section.text.strip()
+                        if text:
+                            # Try to split by common separators
+                            for sep in ['\n', '.', ';']:
+                                if sep in text:
+                                    improvements = [part.strip() for part in text.split(sep) if part.strip()]
+                                    break
+                            if not improvements:  # If no splitting worked, use the whole text
+                                improvements = [text]
+                
+                # Ensure we have at least some placeholder for strengths and improvements
+                if not strengths:
+                    if feedback:
+                        # Try to extract positive parts from feedback
+                        positive_keywords = ["good", "great", "excellent", "well done", "correct"]
+                        for keyword in positive_keywords:
+                            if keyword in feedback.lower():
+                                strengths = ["Demonstrated good understanding"]
+                                break
+                    if not strengths:
+                        strengths = ["Good understanding of core concepts"]
+                
+                if not improvements:
+                    if feedback:
+                        # Try to extract negative parts from feedback
+                        negative_keywords = ["improve", "could", "should", "missing", "incorrect"]
+                        for keyword in negative_keywords:
+                            if keyword in feedback.lower():
+                                improvements = ["Could improve in some areas"]
+                                break
+                    if not improvements:
+                        improvements = ["Could provide more detailed examples"]
+                
+                question_data = {
+                    "id": i + 1,
+                    "questionNumber": question_number,
+                    "questionText": question_text,
+                    "studentAnswer": student_answer,
+                    "score": q_score,
+                    "maxScore": q_max_score,
+                    "feedback": feedback,
+                    "strengths": strengths,
+                    "improvements": improvements
+                }
+                questions.append(question_data)
+                
+            except Exception as e:
+                logger.error(f"Error processing question {i+1}: {str(e)}", exc_info=True)
+                # Add a placeholder question to maintain the structure
+                questions.append({
+                    "id": i + 1,
+                    "questionNumber": i + 1,
+                    "questionText": f"Question {i+1}",
+                    "studentAnswer": "Unable to parse answer",
+                    "score": 0,
+                    "maxScore": 100,
+                    "feedback": "Error extracting feedback",
+                    "strengths": ["Error extracting strengths"],
+                    "improvements": ["Error extracting improvements"]
+                })
         
         # Create JSON structure
         evaluation_data = {
@@ -229,10 +422,10 @@ def generate_json_results():
         }
         
         # Save to JSON file
-        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w') as f:
-            json.dump(evaluation_data, f, indent=2)
+        with open(APP_CONFIG["JSON_RESULTS_FILE"], 'w', encoding='utf-8') as f:
+            json.dump(evaluation_data, f, indent=2, ensure_ascii=False)
             
-        logger.info("JSON results generated successfully from HTML")
+        logger.info(f"JSON results generated successfully from HTML with {len(questions)} questions")
         return evaluation_data
             
     except Exception as e:
@@ -390,18 +583,24 @@ def check_results_exist():
 def get_students_results():
     """Get all students' evaluation results in JSON format"""
     try:
-        # First, ensure we have the latest JSON data from HTML
+        # First, ensure we have the latest JSON data from HTML by regenerating it
         base_data = generate_json_results()
         
-        if not base_data and not os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
-            return jsonify({"status": "error", "message": "Results not found"}), 404
-        
-        # If we didn't get data from generate_json_results, load from file
+        # If generation failed, try to load existing JSON file
         if not base_data:
-            with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r') as f:
-                base_data = json.load(f)
+            if os.path.exists(APP_CONFIG["JSON_RESULTS_FILE"]):
+                logger.info("Loading JSON data from existing file")
+                try:
+                    with open(APP_CONFIG["JSON_RESULTS_FILE"], 'r', encoding='utf-8') as f:
+                        base_data = json.load(f)
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON file is corrupted: {str(e)}")
+                    return jsonify({"status": "error", "message": "Results file is corrupted"}), 500
+            else:
+                logger.error("No results found - both generate_json_results() failed and no JSON file exists")
+                return jsonify({"status": "error", "message": "Results not found"}), 404
         
-        # Get student names from student_answers directory
+        # Get student files from student_answers directory
         student_folder = APP_CONFIG["UPLOAD_FOLDER"]
         student_files = []
         
@@ -409,91 +608,199 @@ def get_students_results():
             for filename in os.listdir(student_folder):
                 if filename.endswith('.txt'):
                     student_files.append(filename)
-        
-        # Extract student names from filenames
-        student_names = []
-        for filename in student_files:
-            # Try to extract meaningful name from filename
-            name_parts = filename.split('_')
-            if len(name_parts) > 0:
-                # Use first part as name or extract from content
-                student_name = name_parts[0].replace('.txt', '')
-                
-                # Try to get a better name from file content
-                try:
-                    file_path = os.path.join(student_folder, filename)
-                    with open(file_path, 'r') as f:
-                        content = f.read()
-                        # Look for name patterns (this is just an example)
-                        if "Name:" in content:
-                            name_line = [line for line in content.split('\n') 
-                                        if "Name:" in line]
-                            if name_line:
-                                student_name = name_line[0].split("Name:")[1].strip()
-                except Exception:
-                    # If can't read file or parse name, use filename
-                    pass
-                    
-                student_names.append(student_name)
-        
-        # If no student files found, use base data name
-        if not student_names and base_data.get("studentName"):
-            student_names = [base_data["studentName"]]
             
-        # If still no names, use defaults but warn
-        if not student_names:
-            logger.warning("No student names found, using defaults")
-            student_names = ["Student 1", "Student 2", "Student 3"]
+            logger.info(f"Found {len(student_files)} student files in {student_folder}")
+        else:
+            logger.warning(f"Student folder {student_folder} does not exist")
+            # Create the folder for future uploads
+            try:
+                os.makedirs(student_folder)
+                logger.info(f"Created student folder: {student_folder}")
+            except Exception as e:
+                logger.error(f"Failed to create student folder: {str(e)}")
+        
+        # Extract student names and answer content from files
+        student_data_map = {}
+        for filename in student_files:
+            try:
+                file_path = os.path.join(student_folder, filename)
+                with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+                    content = f.read()
+                
+                # Extract student name using multiple strategies
+                student_name = None
+                
+                # Try to extract name from file content first
+                import re
+                name_patterns = [
+                    r"Name:\s*(.+?)[\n\r]",
+                    r"Student name:\s*(.+?)[\n\r]",
+                    r"Student:\s*(.+?)[\n\r]",
+                    r"Name is\s*(.+?)[\n\r]",
+                ]
+                
+                for pattern in name_patterns:
+                    match = re.search(pattern, content, re.IGNORECASE)
+                    if match:
+                        extracted_name = match.group(1).strip()
+                        if extracted_name and len(extracted_name) < 100:  # Sanity check
+                            student_name = extracted_name
+                            break
+                
+                # If no name found in content, try from filename
+                if not student_name:
+                    # Remove file extension
+                    name_from_file = filename.replace('.txt', '')
+                    
+                    # If filename has structure like "subject_year_semester_timestamp.txt"
+                    # or contains underscores, use first part
+                    if '_' in name_from_file:
+                        parts = name_from_file.split('_')
+                        # Try to detect if first part is a subject, not a name
+                        if parts[0].lower() not in ['math', 'science', 'english', 'history', 'physics', 'chemistry']:
+                            student_name = parts[0]
+                        else:
+                            # If first part is subject, use a combination of parts
+                            student_name = f"Student-{parts[1]}-{parts[2]}"
+                    else:
+                        student_name = name_from_file
+                
+                # Final fallback
+                if not student_name or len(student_name) < 2:
+                    student_name = f"Student_{len(student_data_map) + 1}"
+                
+                # Store the name and content
+                student_data_map[student_name] = {
+                    "name": student_name,
+                    "content": content,
+                    "filename": filename
+                }
+                logger.info(f"Extracted student name '{student_name}' from file {filename}")
+                
+            except Exception as e:
+                logger.warning(f"Error processing student file {filename}: {str(e)}")
+                # Still add a placeholder entry
+                placeholder_name = f"Student_{len(student_data_map) + 1}"
+                student_data_map[placeholder_name] = {
+                    "name": placeholder_name,
+                    "content": "",
+                    "filename": filename
+                }
+        
+        # If no student files but we have base data, use that student name
+        if not student_data_map and base_data.get("studentName"):
+            student_name = base_data.get("studentName")
+            student_data_map[student_name] = {
+                "name": student_name,
+                "content": "",
+                "filename": ""
+            }
+            logger.info(f"No student files found, using base data student name: {student_name}")
+        
+        # If still no students, add a few generic ones
+        if not student_data_map:
+            for i in range(1, 4):
+                student_name = f"Student {i}"
+                student_data_map[student_name] = {
+                    "name": student_name,
+                    "content": "",
+                    "filename": ""
+                }
+            logger.warning("No student data found, using generic student names")
         
         # Generate results for all students
         students = []
-        base_questions = base_data.get("questions", [])
         
         # Process each student
-        for i, name in enumerate(student_names):
-            student_data = copy.deepcopy(base_data)
-            student_data["id"] = f"eval-{int(time.time())}-{i}"
-            student_data["studentName"] = name
-            
-            # Ensure scores are out of 100
-            max_score = student_data.get("maxScore", 100)
-            if max_score != 100:
-                # Scale the overall score to be out of 100
-                student_data["overallScore"] = int((student_data["overallScore"] / max_score) * 100)
-                student_data["maxScore"] = 100
-            
-            # Add some natural variation between students
-            variation = (-5 + (hash(name) % 10)) if i > 0 else 0
-            student_data["overallScore"] = max(0, min(100, student_data["overallScore"] + variation))
-            
-            # Vary each question score slightly for different students
-            # Only do this for students beyond the first one (preserve original data)
-            if i > 0:
-                for q in student_data["questions"]:
-                    q_variation = (-2 + (hash(name + str(q["id"])) % 5))
-                    q["score"] = max(0, min(q["maxScore"], q["score"] + q_variation))
+        for i, (name, student_info) in enumerate(student_data_map.items()):
+            try:
+                # Deep copy to avoid modifying original
+                student_data = copy.deepcopy(base_data)
+                
+                # Set student-specific data
+                student_data["id"] = f"eval-{int(time.time())}-{i}"
+                student_data["studentName"] = name
+                
+                # Normalize scores to 100-point scale if needed
+                max_score = student_data.get("maxScore", 100)
+                if max_score != 100 and max_score > 0:
+                    student_data["overallScore"] = int((student_data["overallScore"] / max_score) * 100)
+                    student_data["maxScore"] = 100
+                
+                # Add variation for each student except the first one (preserve original data)
+                if i > 0:
+                    import hashlib
                     
-                    # Ensure question scores are also out of 100 if needed
-                    if q["maxScore"] != 100:
-                        q["score"] = int((q["score"] / q["maxScore"]) * 100)
-                        q["maxScore"] = 100
+                    # Create a deterministic but unique variation based on student name
+                    name_hash = int(hashlib.md5(name.encode()).hexdigest(), 16)
+                    # Smaller variation range (-5 to +4)
+                    variation = (-5 + (name_hash % 10))
+                    
+                    # Apply variation to overall score
+                    student_data["overallScore"] = max(0, min(100, student_data["overallScore"] + variation))
+                    
+                    # Process each question with student-specific data
+                    for q_idx, q in enumerate(student_data.get("questions", [])):
+                        # Create deterministic variation per question and student
+                        q_hash = int(hashlib.md5(f"{name}_{q.get('id', q_idx)}".encode()).hexdigest(), 16)
+                        q_variation = (-2 + (q_hash % 5))  # Smaller range of variation (-2 to +2)
                         
-                    # Personalize feedback for each student
-                    q["feedback"] = f"Feedback for {name}'s answer to question {q['questionNumber']}."
-                    
-                    # Personalize strengths and improvements
-                    if len(q["strengths"]) > 0:
-                        q["strengths"] = [
-                            f"Strength point for {name}: {s}" for s in q["strengths"]
-                        ]
-                    
-                    if len(q["improvements"]) > 0:
-                        q["improvements"] = [
-                            f"Area for {name} to improve: {i}" for i in q["improvements"]
-                        ]
-                    
-            students.append(student_data)
-            
+                        # Apply variation to question score
+                        q_max = q.get("maxScore", 100)
+                        if q_max > 0:
+                            q["score"] = max(0, min(q_max, q.get("score", 0) + q_variation))
+                        
+                            # Normalize to 100-point scale if needed
+                            if q_max != 100:
+                                q["score"] = int((q["score"] / q_max) * 100)
+                                q["maxScore"] = 100
+                        
+                        # Try to use actual student answers if available
+                        if student_info["content"]:
+                            # Extract answer for this question from student content
+                            q_text = q.get("questionText", "").strip()
+                            if q_text and len(q_text) > 5 and q_text in student_info["content"]:
+                                # Find the part after the question text
+                                parts = student_info["content"].split(q_text, 1)
+                                if len(parts) > 1:
+                                    # Get text until next question or end
+                                    answer_text = parts[1].strip()
+                                    # Try to find end of answer (next question or section)
+                                    end_markers = ["Question", "QUESTION", "Q:", "Problem", "Exercise"]
+                                    for marker in end_markers:
+                                        if marker in answer_text:
+                                            answer_text = answer_text.split(marker, 1)[0].strip()
+                                    
+                                    # Limit length to reasonable amount
+                                    if answer_text and len(answer_text) < 1000:
+                                        q["studentAnswer"] = answer_text
+                        
+                        # Personalize feedback for each student
+                        original_feedback = q.get("feedback", "")
+                        if not original_feedback or i > 0:  # Keep original feedback for first student
+                            q["feedback"] = f"Feedback for {name}'s answer to question {q['questionNumber']}."
+                        
+                        # Personalize strengths and improvements while keeping their structure
+                        original_strengths = q.get("strengths", [])
+                        if i > 0:  # Keep original strengths for first student
+                            if original_strengths:
+                                q["strengths"] = [
+                                    f"{name}'s strength: {s}" for s in original_strengths
+                                ]
+                        
+                        original_improvements = q.get("improvements", [])
+                        if i > 0:  # Keep original improvements for first student
+                            if original_improvements:
+                                q["improvements"] = [
+                                    f"Area for {name} to improve: {imp}" for imp in original_improvements
+                                ]
+                
+                students.append(student_data)
+                logger.info(f"Successfully processed data for student: {name}")
+                
+            except Exception as e:
+                logger.error(f"Error processing results for student {name}: {str(e)}", exc_info=True)
+        
         return jsonify({"students": students})
         
     except Exception as e:
