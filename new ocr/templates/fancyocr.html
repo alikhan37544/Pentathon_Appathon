@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fancy OCR - Extract Text from Images</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="app-title">OCR Platform</div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/">
+                    <div class="icon">⌂</div>
+                    <span>Home</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <a href="/" class="btn btn-outline">Back to Home</a>
+        </div>
+        
+        <div class="page-header">
+            <h1 class="page-title">Fancy OCR</h1>
+            <p class="page-subtitle">Upload an image and extract text using our advanced AI vision model</p>
+        </div>
+        
+        <!-- OCR Upload Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Text Extraction</h2>
+            </div>
+            <div class="card-body">
+                <div class="drop-area" id="dropArea">
+                    <div class="icon">📄</div>
+                    <p>Drop your file(s) here, or <span class="browse-link" id="browseLink">browse</span></p>
+                    <p class="file-info">Supports: png, jpg, jpeg, gif, bmp, webp (max size 90MB)</p>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*">
+                </div>
+                
+                <div class="files-list" id="filesList"></div>
+                
+                <button type="button" class="btn" id="processButton">Extract Text</button>
+                
+                <div id="loader" class="loader"></div>
+                
+                <div id="resultContainer" class="result-container hidden">
+                    <h3 class="result-heading">Extracted Text:</h3>
+                    <div id="result" class="result-box"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- About OCR Technology -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">About OCR Technology</h2>
+            </div>
+            <div class="card-body">
+                <p>Our Fancy OCR system uses the Llama 3.2 Vision model to accurately extract text from images. The system can handle:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li>Complex layouts with multiple columns</li>
+                    <li>Tables and structured data</li>
+                    <li>Handwritten text (with moderate accuracy)</li>
+                    <li>Various image formats and quality levels</li>
+                </ul>
+                <p style="margin-top: 1rem;">The extracted text preserves formatting as much as possible, making it ideal for digitizing documents.</p>
+            </div>
+        </div>
+    </div>
+            <li>
+                <a href="/fancyocr" class="active">
+                    <div class="icon">📷</div>
+                    <span>Fancy OCR</span>
+                </a>
+            </li>
+            <li>
+                <a href="/ollama">
+                    <div class="icon">💬</div>
+                    <span>Ollama Chat</span>
+                </a>
+            </li>

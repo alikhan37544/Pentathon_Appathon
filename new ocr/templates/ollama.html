@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Chat - OCR Hackathon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="app-title">OCR Platform</div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="/">
+                    <div class="icon">⌂</div>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="/fancyocr">
+                    <div class="icon">📷</div>
+                    <span>Fancy OCR</span>
+                </a>
+            </li>
+            <li>
+                <a href="/ollama" class="active">
+                    <div class="icon">💬</div>
+                    <span>Ollama Chat</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="top-bar">
+            <a href="/" class="btn btn-outline">Back to Home</a>
+        </div>
+        
+        <div class="page-header">
+            <h1 class="page-title">Ollama Chat</h1>
+            <p class="page-subtitle">Chat with Ollama's powerful language models</p>
+        </div>
+        
+        <!-- Chat Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Chat Interface</h2>
+                <div class="model-selection">
+                    <label for="model-select">Model:</label>
+                    <select id="model-select">
+                        <option value="llama3">Llama 3</option>
+                        <option value="mistral">Mistral</option>
+                        <option value="phi3">Phi-3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chat-container">
+                    <div class="message-container" id="messageContainer">
+                        <div class="message bot-message">
+                            Hello! I'm Ollama. How can I assist you today?
+                        </div>
+                    </div>
+                    
+                    <div class="message-input-container">
+                        <input type="text" id="messageInput" placeholder="Type your message...">
+                        <button type="button" class="btn" id="sendButton">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- About Ollama Models -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Available Models</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--primary);">Llama 3</h3>
+                        <p>Meta's latest language model, optimized for helpful and accurate responses across a wide range of tasks.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--secondary);">Mistral</h3>
+                        <p>A powerful and efficient model that excels at reasoning and detailed explanations.</p>
+                    </div>
+                    
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--accent);">Phi-3</h3>
+                        <p>Microsoft's compact yet powerful model, designed for efficiency and accurate responses.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
